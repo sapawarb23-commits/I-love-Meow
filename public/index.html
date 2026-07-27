@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>I Love Meow — A whole internet, purring.</title>
+<meta name="description" content="I Love Meow is a cozy social feed for cat lovers — share Meows, explore breeds, chase leaderboards, and hang out with a clowder of fellow cat people.">
+<link rel="canonical" href="https://ilovemeow.app/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="I Love Meow — A whole internet, purring.">
+<meta property="og:description" content="I Love Meow is a cozy social feed for cat lovers — share Meows, explore breeds, chase leaderboards, and hang out with a clowder of fellow cat people.">
+<meta property="og:url" content="https://ilovemeow.app/">
+<meta property="og:image" content="https://ilovemeow.app/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="I Love Meow — A whole internet, purring.">
+<meta name="twitter:description" content="I Love Meow is a cozy social feed for cat lovers — share Meows, explore breeds, chase leaderboards, and hang out with a clowder of fellow cat people.">
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --primary:#FF914D;
+    --primary-dark:#E87A34;
+    --cream:#FFF8F0;
+    --dark:#1D1D1D;
+    --gray:#F5F5F5;
+    --pink:#FFC7D6;
+    --success:#64D27A;
+    --warning:#FFCC4D;
+    --radius-lg: 32px;
+    --radius-md: 20px;
+    --radius-sm: 14px;
+    --shadow-soft: 0 20px 50px -20px rgba(29,29,29,0.18);
+    --shadow-tiny: 0 8px 20px -10px rgba(29,29,29,0.15);
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background: var(--cream);
+    color: var(--dark);
+    font-family:'Inter', sans-serif;
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{ font-family:'Poppins', sans-serif; font-weight:700; letter-spacing:-0.02em; }
+  .cute{ font-family:'Baloo 2', sans-serif; }
+  a{ text-decoration:none; color:inherit; }
+  img,svg{ display:block; }
+  ::selection{ background: var(--pink); color: var(--dark); }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; scroll-behavior:auto !important; }
+  }
+
+  .wrap{ max-width:1180px; margin:0 auto; padding:0 28px; }
+
+  /* ---------- Floating Nav ---------- */
+  .nav-shell{ position:fixed; top:18px; left:0; right:0; z-index:100; display:flex; justify-content:center; padding:0 20px; }
+  .nav{
+    width:100%; max-width:1100px;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:10px 12px 10px 20px;
+    background: rgba(255,248,240,0.72);
+    backdrop-filter: blur(18px) saturate(160%);
+    -webkit-backdrop-filter: blur(18px) saturate(160%);
+    border:1px solid rgba(255,255,255,0.6);
+    border-radius: 999px;
+    box-shadow: var(--shadow-tiny);
+    transition: box-shadow .3s ease, transform .3s ease;
+  }
+  .nav.scrolled{ box-shadow: 0 16px 40px -18px rgba(29,29,29,0.28); }
+  .brand{ display:flex; align-items:center; gap:9px; font-family:'Baloo 2'; font-weight:700; font-size:19px; }
+  .brand .paw{ width:26px; height:26px; }
+  .nav-links{ display:flex; gap:6px; align-items:center; }
+  .nav-links a{
+    font-size:14.5px; font-weight:600; padding:9px 15px; border-radius:999px; color:var(--dark); opacity:.75;
+    transition: opacity .2s, background .2s;
+  }
+  .nav-links a:hover{ opacity:1; background:rgba(29,29,29,0.05); }
+  .nav-cta{
+    background: var(--dark); color:var(--cream) !important; padding:10px 20px !important; opacity:1 !important;
+    font-weight:700 !important; font-size:14px !important;
+  }
+  .nav-cta:hover{ background:#000 !important; }
+  @media (max-width:820px){ .nav-links a:not(.nav-cta){ display:none; } }
+
+  /* ---------- Magnetic buttons ---------- */
+  .btn{
+    display:inline-flex; align-items:center; gap:8px; justify-content:center;
+    padding:16px 30px; border-radius:999px; font-weight:700; font-size:15.5px;
+    cursor:pointer; border:none; transition: transform .18s cubic-bezier(.34,1.56,.64,1), box-shadow .25s;
+    position:relative;
+  }
+  .btn-primary{ background: var(--primary); color:#fff; box-shadow: 0 14px 30px -10px rgba(255,145,77,0.55); }
+  .btn-primary:hover{ transform: translateY(-3px) scale(1.03); box-shadow: 0 20px 36px -10px rgba(255,145,77,0.65); }
+  .btn-ghost{ background: rgba(29,29,29,0.05); color:var(--dark); }
+  .btn-ghost:hover{ background: rgba(29,29,29,0.09); transform: translateY(-2px); }
+
+  /* ---------- Hero ---------- */
+  .hero{ position:relative; padding:190px 0 130px; overflow:hidden; }
+  .blob{ position:absolute; border-radius:50%; filter: blur(10px); opacity:.55; z-index:0; }
+  .blob-1{ width:520px; height:520px; background: radial-gradient(circle at 30% 30%, var(--pink), transparent 70%); top:-180px; left:-160px; animation: drift 16s ease-in-out infinite; }
+  .blob-2{ width:460px; height:460px; background: radial-gradient(circle at 60% 40%, var(--warning), transparent 70%); top:-80px; right:-180px; animation: drift 20s ease-in-out infinite reverse; }
+  .blob-3{ width:380px; height:380px; background: radial-gradient(circle at 50% 50%, var(--primary), transparent 72%); bottom:-220px; left:38%; opacity:.35; animation: drift 24s ease-in-out infinite; }
+  @keyframes drift{ 0%,100%{ transform: translate(0,0) scale(1); } 50%{ transform: translate(30px,-25px) scale(1.06); } }
+
+  .hero-inner{ position:relative; z-index:2; text-align:center; }
+  .eyebrow{
+    display:inline-flex; align-items:center; gap:8px; background:#fff; border:1px solid rgba(29,29,29,0.08);
+    padding:8px 16px; border-radius:999px; font-size:13.5px; font-weight:600; box-shadow: var(--shadow-tiny);
+    animation: fadeUp .7s ease both;
+  }
+  .eyebrow .dot{ width:7px; height:7px; border-radius:50%; background:var(--success); animation: pulse 2s infinite; }
+  @keyframes pulse{ 0%,100%{ opacity:1;} 50%{ opacity:.4; } }
+
+  .hero h1{
+    font-family:'Baloo 2'; font-size: clamp(40px, 6.6vw, 76px); line-height:1.04; margin:26px auto 0; max-width:900px;
+    animation: fadeUp .8s .05s ease both;
+  }
+  .hero h1 .accent{ color:var(--primary); }
+  .hero p.sub{
+    max-width:560px; margin:22px auto 0; font-size:18px; line-height:1.6; color:#4b4b4b;
+    animation: fadeUp .8s .12s ease both;
+  }
+  .hero-ctas{ display:flex; gap:14px; justify-content:center; margin-top:36px; animation: fadeUp .8s .18s ease both; flex-wrap:wrap; }
+  @keyframes fadeUp{ from{ opacity:0; transform: translateY(18px);} to{ opacity:1; transform:translateY(0);} }
+
+  .hero-cats{ position:absolute; inset:0; z-index:1; pointer-events:none; }
+  .float-cat{ position:absolute; will-change: transform; transition: transform .25s ease-out; }
+  .float-cat svg{ width:100%; height:100%; }
+  .bob{ animation: bob 5s ease-in-out infinite; }
+  @keyframes bob{ 0%,100%{ margin-top:0px; } 50%{ margin-top:-16px; } }
+
+  .scroll-cue{ margin:60px auto 0; width:26px; height:42px; border:2px solid rgba(29,29,29,0.25); border-radius:20px; position:relative; }
+  .scroll-cue::after{ content:''; position:absolute; top:8px; left:50%; width:4px; height:8px; background:var(--dark); opacity:.4; border-radius:4px; transform:translateX(-50%); animation: scrollDot 1.6s infinite; }
+  @keyframes scrollDot{ 0%{ transform:translate(-50%,0); opacity:.4;} 50%{ transform:translate(-50%,10px); opacity:1;} 100%{ transform:translate(-50%,0); opacity:.4;} }
+
+  /* ---------- Founder banner (replaces fake stats) ---------- */
+  .founder{ padding:20px 0 90px; }
+  .founder-banner{
+    display:flex; align-items:center; gap:44px; background:#fff; border:2px dashed rgba(255,145,77,0.35);
+    border-radius:var(--radius-lg); padding:44px; box-shadow: var(--shadow-tiny);
+  }
+  .founder-illustration{ flex:0 0 200px; width:200px; height:200px; }
+  .founder-copy h3{ font-family:'Baloo 2'; font-size: clamp(22px,3vw,30px); margin-bottom:12px; line-height:1.25; }
+  .founder-copy p{ color:#5c5c5c; font-size:15.5px; line-height:1.6; max-width:480px; margin-bottom:22px; }
+  @media (max-width:760px){ .founder-banner{ flex-direction:column; text-align:center; padding:34px 26px; } .founder-copy p{ margin-left:auto; margin-right:auto; } }
+
+  /* ---------- How it works (replaces fake testimonials) ---------- */
+  .how-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
+  .how-card{ background:#fff; border-radius:var(--radius-md); padding:28px 24px; box-shadow:var(--shadow-tiny); position:relative; }
+  .how-card .step-num{ font-family:'Baloo 2'; font-size:14px; font-weight:700; color:var(--primary); background:#FFEADB; width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-bottom:16px; }
+  .how-card h3{ font-size:17.5px; margin-bottom:8px; }
+  .how-card p{ font-size:14.5px; color:#666; line-height:1.55; }
+  .how-card .term{ color:var(--primary-dark); font-weight:700; }
+  @media (max-width:860px){ .how-grid{ grid-template-columns:1fr; } }
+
+  /* ---------- Cat rank preview (Meowment Points feature) ---------- */
+  .rank-section{ display:flex; align-items:center; gap:50px; }
+  .rank-card{
+    flex:0 0 320px; background: linear-gradient(160deg,#fff, var(--cream)); border-radius:var(--radius-lg);
+    padding:28px; box-shadow: var(--shadow-soft); border:1px solid rgba(29,29,29,0.06);
+  }
+  .rank-card .example-tag{ display:inline-block; font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#999; background:var(--gray); padding:4px 10px; border-radius:999px; margin-bottom:16px; }
+  .rank-head{ display:flex; align-items:center; gap:14px; margin-bottom:18px; }
+  .rank-avatar{ width:56px; height:56px; border-radius:50%; background:var(--pink); flex-shrink:0; }
+  .rank-head b{ font-family:'Baloo 2'; font-size:19px; display:block; }
+  .rank-head span{ font-size:13px; color:#888; }
+  .rank-bar-shell{ background:var(--gray); height:10px; border-radius:999px; overflow:hidden; margin:6px 0 4px; }
+  .rank-bar{ height:100%; width:0%; background: linear-gradient(90deg, var(--primary), var(--warning)); border-radius:999px; transition: width 1.4s cubic-bezier(.2,.8,.2,1); }
+  .rank-level-label{ display:flex; justify-content:space-between; font-size:12.5px; color:#888; font-weight:600; margin-bottom:18px; }
+  .rank-stats{ display:flex; gap:18px; margin-bottom:18px; }
+  .rank-stats div b{ display:block; font-family:'Poppins'; font-size:17px; }
+  .rank-stats div span{ font-size:12px; color:#888; }
+  .rank-titles{ display:flex; flex-wrap:wrap; gap:8px; }
+  .rank-titles span{ font-size:12.5px; font-weight:700; background:#FFEADB; color:var(--primary-dark); padding:6px 12px; border-radius:999px; }
+  .rank-copy h3{ font-family:'Baloo 2'; font-size: clamp(24px,3.2vw,34px); margin-bottom:14px; }
+  .rank-copy p{ color:#5c5c5c; font-size:15.5px; line-height:1.65; max-width:460px; }
+  @media (max-width:860px){ .rank-section{ flex-direction:column; } .rank-card{ flex-basis:auto; width:100%; max-width:340px; } }
+
+  /* ---------- Section shell ---------- */
+  section{ padding:70px 0; }
+  .section-head{ text-align:center; max-width:620px; margin:0 auto 50px; }
+  .section-head .kicker{ color:var(--primary-dark); font-weight:700; font-size:13.5px; text-transform:uppercase; letter-spacing:.08em; }
+  .section-head h2{ font-family:'Baloo 2'; font-size: clamp(28px,4vw,42px); margin-top:10px; }
+  .section-head p{ margin-top:12px; color:#5c5c5c; font-size:16px; line-height:1.6; }
+  .reveal{ opacity:0; transform: translateY(26px); transition: opacity .7s ease, transform .7s ease; }
+  .reveal.in{ opacity:1; transform:translateY(0); }
+
+  /* ---------- Features ---------- */
+  .features{ display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
+  .feature{
+    background:#fff; border-radius:var(--radius-md); padding:28px 24px; box-shadow: var(--shadow-tiny);
+    transition: transform .3s cubic-bezier(.2,.8,.2,1), box-shadow .3s; position:relative; overflow:hidden;
+  }
+  .feature:hover{ transform: translateY(-8px) rotate(-0.4deg); box-shadow: var(--shadow-soft); }
+  .feature .icon{
+    width:52px; height:52px; border-radius:16px; display:flex; align-items:center; justify-content:center; margin-bottom:16px;
+  }
+  .feature h3{ font-size:18px; margin-bottom:8px; }
+  .feature p{ font-size:14.5px; color:#666; line-height:1.55; }
+  @media (max-width:860px){ .features{ grid-template-columns:1fr 1fr; } }
+  @media (max-width:560px){ .features{ grid-template-columns:1fr; } }
+
+  /* ---------- Marquee ---------- */
+  .marquee-shell{ overflow:hidden; padding:26px 0; background: var(--dark); }
+  .marquee-track{ display:flex; gap:14px; width:max-content; animation: scroll-left 32s linear infinite; }
+  .marquee-shell:hover .marquee-track{ animation-play-state: paused; }
+  @keyframes scroll-left{ from{ transform:translateX(0);} to{ transform:translateX(-50%);} }
+  .tag-pill{
+    display:flex; align-items:center; gap:8px; background:rgba(255,255,255,0.08); color:#fff; padding:11px 20px;
+    border-radius:999px; font-weight:600; font-size:14.5px; white-space:nowrap; border:1px solid rgba(255,255,255,0.08);
+  }
+  .tag-pill.hot{ background:var(--primary); border-color:transparent; }
+
+  /* ---------- App preview mock ---------- */
+  .preview{ display:flex; justify-content:center; }
+  .device{
+    width:100%; max-width:920px; background:#fff; border-radius:36px; padding:14px; box-shadow: var(--shadow-soft);
+    border:1px solid rgba(29,29,29,0.06);
+  }
+  .device-screen{
+    background: linear-gradient(160deg, var(--gray), #fff 60%); border-radius:24px; padding:26px; min-height:340px;
+    display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px;
+  }
+  .card-mock{ background:#fff; border-radius:18px; padding:14px; box-shadow: var(--shadow-tiny); }
+  .card-mock .thumb{ height:110px; border-radius:12px; margin-bottom:10px; }
+  .card-mock .line{ height:8px; border-radius:6px; background:var(--gray); margin-bottom:6px; }
+  .card-mock .line.w60{ width:60%; }
+
+  /* ---------- Testimonials ---------- */
+  .testimonials{ display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
+  .t-card{ background:#fff; border-radius:var(--radius-md); padding:26px; box-shadow:var(--shadow-tiny); }
+  .t-card .stars{ color:var(--warning); font-size:14px; margin-bottom:12px; letter-spacing:2px; }
+  .t-card p{ font-size:15px; line-height:1.6; color:#444; margin-bottom:16px; }
+  .t-who{ display:flex; align-items:center; gap:10px; }
+  .t-avatar{ width:38px; height:38px; border-radius:50%; }
+  .t-who b{ font-size:14px; display:block; }
+  .t-who span{ font-size:12.5px; color:#888; }
+  @media (max-width:860px){ .testimonials{ grid-template-columns:1fr; } }
+
+  /* ---------- FAQ ---------- */
+  .faq{ max-width:720px; margin:0 auto; }
+  .faq-item{ background:#fff; border-radius:18px; margin-bottom:12px; box-shadow: var(--shadow-tiny); overflow:hidden; }
+  .faq-q{ display:flex; justify-content:space-between; align-items:center; padding:20px 24px; cursor:pointer; font-weight:600; font-size:15.5px; }
+  .faq-q .plus{ transition: transform .3s ease; font-size:20px; color:var(--primary); flex-shrink:0; margin-left:16px; }
+  .faq-item.open .plus{ transform: rotate(45deg); }
+  .faq-a{ max-height:0; overflow:hidden; transition: max-height .35s ease; }
+  .faq-a p{ padding:0 24px 20px; color:#5c5c5c; font-size:14.5px; line-height:1.6; }
+
+  /* ---------- CTA band ---------- */
+  .cta-band{
+    background: linear-gradient(135deg, var(--primary), #ff7a5c); border-radius:40px; padding:60px 40px; text-align:center;
+    position:relative; overflow:hidden; color:#fff;
+  }
+  .cta-band h2{ font-family:'Baloo 2'; font-size: clamp(28px,4vw,40px); }
+  .cta-band p{ margin-top:12px; opacity:.9; }
+  .cta-band .btn-primary{ background:#fff; color:var(--primary-dark); margin-top:26px; box-shadow:0 14px 30px -10px rgba(0,0,0,0.25); }
+  .cta-band .btn-primary:hover{ box-shadow:0 20px 36px -10px rgba(0,0,0,0.3); }
+  .cta-paws{ position:absolute; inset:0; opacity:.15; }
+
+  /* ---------- Footer ---------- */
+  footer{ padding:70px 0 40px; }
+  .footer-grid{ display:grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap:30px; padding-bottom:40px; border-bottom:1px solid rgba(29,29,29,0.08); }
+  .footer-grid h4{ font-size:13.5px; margin-bottom:14px; color:#8a8a8a; text-transform:uppercase; letter-spacing:.06em; }
+  .footer-grid a{ display:block; font-size:14.5px; color:#444; margin-bottom:10px; font-weight:500; }
+  .footer-grid a:hover{ color:var(--primary-dark); }
+  .footer-bottom{ display:flex; justify-content:space-between; align-items:center; padding-top:24px; font-size:13px; color:#8a8a8a; flex-wrap:wrap; gap:12px; }
+  @media (max-width:760px){ .footer-grid{ grid-template-columns:1fr 1fr; } }
+
+  /* ---------- Easter egg toast ---------- */
+  #egg-toast{
+    position:fixed; bottom:26px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--dark); color:#fff;
+    padding:14px 22px; border-radius:999px; font-weight:600; font-size:14px; display:flex; align-items:center; gap:10px;
+    opacity:0; pointer-events:none; transition: opacity .3s, transform .3s; z-index:300; box-shadow: var(--shadow-soft);
+  }
+  #egg-toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+  .runner-cat{ position:fixed; bottom:20px; left:-120px; width:64px; height:64px; z-index:299; pointer-events:none; }
+  .paw-print{ position:fixed; width:16px; height:16px; opacity:.35; z-index:298; pointer-events:none; }
+</style>
+</head>
+<body>
+
+<!-- ================= NAV ================= -->
+<div class="nav-shell">
+  <nav class="nav" id="nav">
+    <div class="brand">
+      <svg class="paw" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="15.5" r="6" fill="#FF914D"/><circle cx="5.5" cy="9" r="2.6" fill="#FF914D"/><circle cx="18.5" cy="9" r="2.6" fill="#FF914D"/><circle cx="9" cy="4.8" r="2.2" fill="#FF914D"/><circle cx="15" cy="4.8" r="2.2" fill="#FF914D"/></svg>
+      I Love Meow
+    </div>
+    <div class="nav-links">
+      <a href="#explore">Explore</a>
+      <a href="#communities">Clowders</a>
+      <a href="#faq">FAQ</a>
+      <a href="/login.html" id="nav-login-link">Log in</a>
+      <a href="/register.html" class="nav-cta" id="nav-cta-link">Join the Clowder</a>
+    </div>
+  </nav>
+</div>
+
+<!-- ================= HERO ================= -->
+<header class="hero" id="hero">
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+
+  <div class="hero-cats" id="heroCats">
+    <!-- floating parallax cats, positioned via JS-friendly inline style -->
+    <div class="float-cat bob" data-depth="30" style="top:22%; left:8%; width:78px; height:78px; animation-delay:0s;">
+      <svg viewBox="0 0 100 100"><ellipse cx="50" cy="62" rx="34" ry="28" fill="#FFC7D6"/><path d="M22 46 L14 18 L38 38 Z" fill="#FFC7D6"/><path d="M78 46 L86 18 L62 38 Z" fill="#FFC7D6"/><circle cx="38" cy="58" r="4" fill="#1D1D1D"/><circle cx="62" cy="58" r="4" fill="#1D1D1D"/><path d="M46 66 Q50 70 54 66" stroke="#1D1D1D" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>
+    </div>
+    <div class="float-cat bob" data-depth="55" style="top:14%; right:10%; width:96px; height:96px; animation-delay:1.2s;">
+      <svg viewBox="0 0 100 100"><ellipse cx="50" cy="62" rx="34" ry="28" fill="#FFCC4D"/><path d="M22 46 L14 18 L38 38 Z" fill="#FFCC4D"/><path d="M78 46 L86 18 L62 38 Z" fill="#FFCC4D"/><circle cx="38" cy="58" r="4" fill="#1D1D1D"/><circle cx="62" cy="58" r="4" fill="#1D1D1D"/><path d="M46 66 Q50 70 54 66" stroke="#1D1D1D" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>
+    </div>
+    <div class="float-cat bob" data-depth="18" style="bottom:12%; left:14%; width:64px; height:64px; animation-delay:0.6s;">
+      <svg viewBox="0 0 100 100"><ellipse cx="50" cy="62" rx="34" ry="28" fill="#FF914D"/><path d="M22 46 L14 18 L38 38 Z" fill="#FF914D"/><path d="M78 46 L86 18 L62 38 Z" fill="#FF914D"/><circle cx="38" cy="58" r="4" fill="#fff"/><circle cx="62" cy="58" r="4" fill="#fff"/><path d="M46 66 Q50 70 54 66" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>
+    </div>
+    <div class="float-cat bob" data-depth="42" style="bottom:18%; right:12%; width:80px; height:80px; animation-delay:1.8s;">
+      <svg viewBox="0 0 100 100"><ellipse cx="50" cy="62" rx="34" ry="28" fill="#1D1D1D"/><path d="M22 46 L14 18 L38 38 Z" fill="#1D1D1D"/><path d="M78 46 L86 18 L62 38 Z" fill="#1D1D1D"/><circle cx="38" cy="58" r="4" fill="#fff"/><circle cx="62" cy="58" r="4" fill="#fff"/><path d="M46 66 Q50 70 54 66" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>
+    </div>
+  </div>
+
+  <div class="wrap hero-inner">
+    <div class="eyebrow"><span class="dot"></span> Just launched — be one of the first Meows</div>
+    <h1>A whole internet, <span class="accent cute">purring.</span></h1>
+    <p class="sub">Give your cat a home page, post your first Meow, and join a clowder of people obsessed with the same breed. Built for cat people, by cat people.</p>
+    <div class="hero-ctas">
+      <a href="/register.html" class="btn btn-primary" id="hero-cta-link">Join the Clowder</a>
+      <a href="#explore" class="btn btn-ghost">Peek Inside ↓</a>
+    </div>
+    <div class="scroll-cue"></div>
+  </div>
+</header>
+
+<!-- ================= FOUNDER BANNER (no fake numbers) ================= -->
+<section class="founder">
+  <div class="wrap">
+    <div class="founder-banner reveal">
+      <div class="founder-illustration">
+        <svg viewBox="0 0 200 200">
+          <circle cx="100" cy="100" r="92" fill="#FFF3D1"/>
+          <ellipse cx="100" cy="128" rx="50" ry="38" fill="#FF914D"/>
+          <path d="M64 96 L48 54 L88 82 Z" fill="#FF914D"/>
+          <path d="M136 96 L152 54 L112 82 Z" fill="#FF914D"/>
+          <circle cx="86" cy="120" r="6" fill="#1D1D1D"/>
+          <circle cx="114" cy="120" r="6" fill="#1D1D1D"/>
+          <path d="M92 132 Q100 138 108 132" stroke="#1D1D1D" stroke-width="3" fill="none" stroke-linecap="round"/>
+          <path d="M100 40 L106 58 L124 60 L110 72 L114 90 L100 80 L86 90 L90 72 L76 60 L94 58 Z" fill="#FFCC4D"/>
+        </svg>
+      </div>
+      <div class="founder-copy">
+        <h3>Your cat could become our very first featured superstar.</h3>
+        <p>We just opened the doors, so there's no leaderboard to scroll past yet — just an empty stage and a spotlight waiting for the right cat. Post the first Meow and claim it.</p>
+        <a href="/feed.html" class="btn btn-primary" id="first-meow-link">Post the First Meow</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FEATURES ================= -->
+<section id="explore">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div class="kicker">What's inside</div>
+      <h2 class="cute">Everything a cat person could want</h2>
+      <p>One home for the profile, the community, the scroll, and the occasional 2am adoption spiral.</p>
+    </div>
+    <div class="features">
+      <div class="feature reveal">
+        <div class="icon" style="background:#FFEADB;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="15" r="5" fill="#FF914D"/><circle cx="6" cy="9" r="2" fill="#FF914D"/><circle cx="18" cy="9" r="2" fill="#FF914D"/><circle cx="9.5" cy="5" r="1.8" fill="#FF914D"/><circle cx="14.5" cy="5" r="1.8" fill="#FF914D"/></svg>
+        </div>
+        <h3>Cat profiles</h3>
+        <p>Name, breed, birthday, favorite sleeping spot — give your cat the home page they deserve, timeline included.</p>
+      </div>
+      <div class="feature reveal">
+        <div class="icon" style="background:#FFE3EA;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M4 12a8 8 0 1116 0 8 8 0 01-16 0z" stroke="#E85C82" stroke-width="1.8"/><path d="M9 10c0-1 1-1.6 1-1.6M15 10c0-1-1-1.6-1-1.6" stroke="#E85C82" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </div>
+        <h3>Clowders</h3>
+        <p>Join a real community — Orange Cats, Maine Coons, Adoption & Rescue — each with its own rules and mods.</p>
+      </div>
+      <div class="feature reveal">
+        <div class="icon" style="background:#FFF3D1;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="4" y="4" width="7" height="7" rx="2" fill="#E8A63B"/><rect x="13" y="4" width="7" height="7" rx="2" fill="#E8A63B" opacity=".5"/><rect x="4" y="13" width="7" height="7" rx="2" fill="#E8A63B" opacity=".5"/><rect x="13" y="13" width="7" height="7" rx="2" fill="#E8A63B"/></svg>
+        </div>
+        <h3>The Meow feed</h3>
+        <p>Every post is a Meow — photos, videos, or a caption asking the internet why your cat is like this. Sorted by loaf, blep, zoomie, and orange-cat energy.</p>
+      </div>
+      <div class="feature reveal">
+        <div class="icon" style="background:#E1F7E6;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 3l2.5 5.6 6.1.6-4.6 4.1 1.4 6-5.4-3.2-5.4 3.2 1.4-6-4.6-4.1 6.1-.6z" fill="#3FA85B"/></svg>
+        </div>
+        <h3>Meowment Points</h3>
+        <p>Earn Purrs and Meowments on your posts, complete daily missions, and stack up Fish Coins and Meowment Points as you go.</p>
+      </div>
+      <div class="feature reveal">
+        <div class="icon" style="background:#FFEADB;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 21s-7-4.6-9.5-9C.7 8.4 2.6 4 7 4c2 0 3.6 1.2 5 3 1.4-1.8 3-3 5-3 4.4 0 6.3 4.4 4.5 8-2.5 4.4-9.5 9-9.5 9z" fill="#FF914D"/></svg>
+        </div>
+        <h3>Lost & Found + Adoption</h3>
+        <p>Post a lost cat with location pins, or browse cats near you who are ready for a home. Free, always.</p>
+      </div>
+      <div class="feature reveal">
+        <div class="icon" style="background:#FFE3EA;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M4 19V5a2 2 0 012-2h9l5 5v11a2 2 0 01-2 2H6a2 2 0 01-2-2z" stroke="#E85C82" stroke-width="1.8" fill="none"/><path d="M9 12h6M9 16h4" stroke="#E85C82" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </div>
+        <h3>Cat encyclopedia</h3>
+        <p>Every recognized breed, temperament notes, and grooming needs — written for people, not vets.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= MARQUEE ================= -->
+<div class="marquee-shell" id="communities">
+  <div class="marquee-track" id="marqueeTrack"></div>
+</div>
+
+<!-- ================= APP PREVIEW ================= -->
+<section>
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div class="kicker">A look inside</div>
+      <h2 class="cute">Feels like scrolling a friend's camera roll</h2>
+      <p>Photos, videos, polls, and the occasional 3am zoomie clip — all in one soft, fast feed.</p>
+    </div>
+    <div class="preview reveal">
+      <div class="device">
+        <div class="device-screen">
+          <div class="card-mock"><div class="thumb" style="background:#FFE3D4;"></div><div class="line w60"></div><div class="line"></div></div>
+          <div class="card-mock"><div class="thumb" style="background:#FFE3EA;"></div><div class="line w60"></div><div class="line"></div></div>
+          <div class="card-mock"><div class="thumb" style="background:#E1F7E6;"></div><div class="line w60"></div><div class="line"></div></div>
+          <div class="card-mock"><div class="thumb" style="background:#FFF3D1;"></div><div class="line w60"></div><div class="line"></div></div>
+          <div class="card-mock"><div class="thumb" style="background:#F5F5F5;"></div><div class="line w60"></div><div class="line"></div></div>
+          <div class="card-mock"><div class="thumb" style="background:#FFE3D4;"></div><div class="line w60"></div><div class="line"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= HOW IT WORKS ================= -->
+<section>
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div class="kicker">How it works</div>
+      <h2 class="cute">Three steps, then it's your cat's world</h2>
+    </div>
+    <div class="how-grid">
+      <div class="how-card reveal">
+        <div class="step-num">1</div>
+        <h3>Give your cat a profile</h3>
+        <p>Name, breed, birthday, favorite sleeping spot. Your cat gets an identity before you even post anything.</p>
+      </div>
+      <div class="how-card reveal">
+        <div class="step-num">2</div>
+        <h3>Post your first <span class="term">Meow</span></h3>
+        <p>A photo, a video, or just a caption. Every post is a Meow, and it's the start of your cat's timeline.</p>
+      </div>
+      <div class="how-card reveal">
+        <div class="step-num">3</div>
+        <h3>Earn <span class="term">Purrs</span> & <span class="term">Meowments</span></h3>
+        <p>Likes are Purrs, comments are Meowments. Both feed into your cat's own Meowment Points and level.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= CAT RANK PREVIEW ================= -->
+<section>
+  <div class="wrap rank-section">
+    <div class="rank-card reveal">
+      <span class="example-tag">Feature preview</span>
+      <div class="rank-head">
+        <svg class="rank-avatar" viewBox="0 0 56 56"><circle cx="28" cy="28" r="28" fill="#FFC7D6"/></svg>
+        <div>
+          <b>Luna</b>
+          <span>Ragdoll · Mood: Sleepy 😴</span>
+        </div>
+      </div>
+      <div class="rank-bar-shell"><div class="rank-bar" id="rankBar"></div></div>
+      <div class="rank-level-label"><span>Level 14</span><span>2,140 / 3,000 MP</span></div>
+      <div class="rank-stats">
+        <div><b>18,231</b><span>Purrs</span></div>
+        <div><b>1,204</b><span>Followers</span></div>
+        <div><b>412</b><span>Meowments</span></div>
+      </div>
+      <div class="rank-titles">
+        <span>⭐ Loaf Legend</span>
+        <span>👑 Sofa Queen</span>
+        <span>🎉 Zoomie Champion</span>
+      </div>
+    </div>
+    <div class="rank-copy reveal">
+      <h3 class="cute">Most platforms reward the person. We reward the cat.</h3>
+      <p>Every cat has its own level, its own Meowment Points, and its own titles to unlock — Loaf Legend, Fish Hunter, Sofa Queen. As people Purr and leave Meowments, your cat levels up and earns cosmetic decorations for their profile. This is a preview of the feature, not a real cat's stats yet — that leaderboard entry is still up for grabs.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FAQ ================= -->
+<section id="faq">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div class="kicker">Questions</div>
+      <h2 class="cute">Before you join the clowder</h2>
+    </div>
+    <div class="faq">
+      <div class="faq-item">
+        <div class="faq-q">Is I Love Meow free? <span class="plus">+</span></div>
+        <div class="faq-a"><p>Yes — posting, browsing, and joining clowders are free. An optional Season Pass adds cosmetic profile decorations and nothing pay-to-win.</p></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Can I add more than one cat? <span class="plus">+</span></div>
+        <div class="faq-a"><p>As many as you have. Each cat gets its own profile, gallery, and timeline, all linked to your account.</p></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">What's a Fish Coin? <span class="plus">+</span></div>
+        <div class="faq-a"><p>Our in-app currency, earned through streaks and challenges. Spend it on profile decorations and event entries.</p></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Can shelters post adoptable cats? <span class="plus">+</span></div>
+        <div class="faq-a"><p>Yes — verified shelters and rescues get a dedicated adoption listing type with location and application forms.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= CTA BAND ================= -->
+<section>
+  <div class="wrap">
+    <div class="cta-band reveal">
+      <h2 class="cute">Your cat is one profile away from internet fame.</h2>
+      <p>Join for free — it takes about as long as your cat's morning stretch.</p>
+      <a href="/profile.html" class="btn btn-primary" id="cta-band-link">Create Your Cat's Profile</a>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FOOTER ================= -->
+<footer>
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <div class="brand" style="margin-bottom:12px;">
+          <svg class="paw" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="15.5" r="6" fill="#FF914D"/><circle cx="5.5" cy="9" r="2.6" fill="#FF914D"/><circle cx="18.5" cy="9" r="2.6" fill="#FF914D"/><circle cx="9" cy="4.8" r="2.2" fill="#FF914D"/><circle cx="15" cy="4.8" r="2.2" fill="#FF914D"/></svg>
+          I Love Meow
+        </div>
+        <p style="font-size:14px; color:#777; max-width:240px; line-height:1.6;">The internet's coziest home for cats and the people who love them.</p>
+      </div>
+      <div>
+        <h4>Explore</h4>
+        <a href="/feed.html">Feed</a><a href="#">Breeds</a><a href="#">Cat cafes</a><a href="#">Events</a>
+      </div>
+      <div>
+        <h4>Community</h4>
+        <a href="#">Clowders</a><a href="#">Leaderboard</a><a href="#">Challenges</a><a href="#">Adoption</a>
+      </div>
+      <div>
+        <h4>Company</h4>
+        <a href="#">About</a><a href="#">Careers</a><a href="#">Guidelines</a><a href="#">Contact</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 I Love Meow. Made with too much affection for cats.</span>
+      <span>Type "pspsps" anywhere for a surprise 🐾</span>
+    </div>
+  </div>
+</footer>
+
+<div id="egg-toast"></div>
+
+<script>
+  // Nav shadow on scroll
+  const nav = document.getElementById('nav');
+  window.addEventListener('scroll', () => {
+    nav.classList.toggle('scrolled', window.scrollY > 10);
+  });
+
+  // Reveal on scroll
+  const revealEls = document.querySelectorAll('.reveal');
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, { threshold: 0.15 });
+  revealEls.forEach(el => io.observe(el));
+
+  // Animated counters
+  const counters = document.querySelectorAll('[data-count]');
+  const countIo = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const el = e.target;
+        const target = parseInt(el.dataset.count, 10);
+        const dur = 1400;
+        const start = performance.now();
+        function tick(now){
+          const p = Math.min(1, (now - start) / dur);
+          const eased = 1 - Math.pow(1 - p, 3);
+          const val = Math.floor(target * eased);
+          el.textContent = val >= 1000000 ? (val/1000000).toFixed(1) + 'M' : val >= 1000 ? (val/1000).toFixed(0) + 'K' : val;
+          if (p < 1) requestAnimationFrame(tick); else el.textContent = target >= 1000000 ? (target/1000000).toFixed(1) + 'M' : (target/1000).toFixed(0) + 'K';
+        }
+        requestAnimationFrame(tick);
+        countIo.unobserve(el);
+      }
+    });
+  }, { threshold: 0.5 });
+  counters.forEach(el => countIo.observe(el));
+
+  // Animate the cat rank preview bar (feature demo, not live data)
+  const rankBar = document.getElementById('rankBar');
+  if (rankBar) {
+    const rankIo = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) { rankBar.style.width = '71%'; rankIo.unobserve(rankBar); }
+      });
+    }, { threshold: 0.4 });
+    rankIo.observe(rankBar);
+  }
+
+  // Mouse parallax on hero cats
+  const hero = document.getElementById('hero');
+  const floatCats = document.querySelectorAll('.float-cat');
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!reduceMotion) {
+    hero.addEventListener('mousemove', (e) => {
+      const rect = hero.getBoundingClientRect();
+      const cx = (e.clientX - rect.left) / rect.width - 0.5;
+      const cy = (e.clientY - rect.top) / rect.height - 0.5;
+      floatCats.forEach(cat => {
+        const depth = parseFloat(cat.dataset.depth) || 20;
+        cat.style.transform = `translate(${cx * depth}px, ${cy * depth}px)`;
+      });
+    });
+  }
+
+  // Marquee content
+  const tags = ['🐱 Maine Coon','🍊 Orange Cat Energy','🍞 Loaf Mode','😝 Bleps','⚡ Zoomies','🐾 Ragdoll','🎩 Tuxedo Cat','🦴 Scottish Fold','😽 Sphynx','🧶 Kitten Chaos','🔥 Trending: Sleepy Cats'];
+  const track = document.getElementById('marqueeTrack');
+  const buildTags = () => tags.map((t,i) => `<div class="tag-pill ${i===tags.length-1?'hot':''}">${t}</div>`).join('');
+  track.innerHTML = buildTags() + buildTags();
+
+  // FAQ accordion
+  document.querySelectorAll('.faq-item').forEach(item => {
+    const q = item.querySelector('.faq-q');
+    const a = item.querySelector('.faq-a');
+    q.addEventListener('click', () => {
+      const isOpen = item.classList.contains('open');
+      document.querySelectorAll('.faq-item.open').forEach(o => { o.classList.remove('open'); o.querySelector('.faq-a').style.maxHeight = null; });
+      if (!isOpen) { item.classList.add('open'); a.style.maxHeight = a.scrollHeight + 'px'; }
+    });
+  });
+
+  // Easter egg toast
+  let toastTimer;
+  function showEgg(msg){
+    const toast = document.getElementById('egg-toast');
+    toast.innerHTML = '🐾 ' + msg;
+    toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove('show'), 2600);
+  }
+
+  // "pspsps" easter egg: summons a running cat + paw prints
+  let buffer = '';
+  window.addEventListener('keydown', (e) => {
+    if (e.key.length === 1) buffer += e.key.toLowerCase();
+    buffer = buffer.slice(-8);
+    if (buffer.includes('pspsps')) {
+      buffer = '';
+      summonCat();
+    }
+  });
+
+  function summonCat(){
+    showEgg('A cat appeared!');
+    const cat = document.createElement('div');
+    cat.className = 'runner-cat';
+    cat.innerHTML = `<svg viewBox="0 0 100 100"><ellipse cx="50" cy="62" rx="34" ry="28" fill="#FF914D"/><path d="M22 46 L14 18 L38 38 Z" fill="#FF914D"/><path d="M78 46 L86 18 L62 38 Z" fill="#FF914D"/><circle cx="38" cy="58" r="4" fill="#fff"/><circle cx="62" cy="58" r="4" fill="#fff"/><path d="M46 66 Q50 70 54 66" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>`;
+    document.body.appendChild(cat);
+    const dur = 3200;
+    const start = performance.now();
+    const y = window.innerHeight - 90;
+    cat.style.bottom = (window.innerHeight - y - 64) + 'px';
+    function step(now){
+      const p = Math.min(1, (now - start) / dur);
+      cat.style.left = (-120 + p * (window.innerWidth + 200)) + 'px';
+      cat.style.transform = `scaleX(1) translateY(${Math.sin(p * 18) * 6}px)`;
+      if (Math.random() < 0.2) dropPaw(parseFloat(cat.style.left) + 20, y + 50);
+      if (p < 1) requestAnimationFrame(step); else cat.remove();
+    }
+    requestAnimationFrame(step);
+  }
+
+  function dropPaw(x, y){
+    const paw = document.createElement('div');
+    paw.className = 'paw-print';
+    paw.style.left = x + 'px';
+    paw.style.top = y + 'px';
+    paw.innerHTML = `<svg viewBox="0 0 24 24" fill="#1D1D1D"><circle cx="12" cy="15.5" r="5"/><circle cx="6" cy="9.5" r="2.2"/><circle cx="18" cy="9.5" r="2.2"/><circle cx="9.5" cy="5.5" r="1.8"/><circle cx="14.5" cy="5.5" r="1.8"/></svg>`;
+    document.body.appendChild(paw);
+    setTimeout(() => { paw.style.transition = 'opacity 1s'; paw.style.opacity = '0'; }, 200);
+    setTimeout(() => paw.remove(), 1200);
+  }
+
+  // If already logged in, point the CTAs straight at the app instead of registration
+  if (localStorage.getItem('ilm_token')) {
+    ['nav-cta-link','hero-cta-link','cta-band-link'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) { el.href = '/feed.html'; el.textContent = el.id === 'cta-band-link' ? "Create Your Cat's Profile" : 'Go to Feed'; }
+    });
+    const loginLink = document.getElementById('nav-login-link');
+    if (loginLink) { loginLink.href = '/profile.html'; loginLink.textContent = 'My Profile'; }
+  }
+</script>
+</body>
+</html>

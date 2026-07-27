@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sky Loaf — I Love Meow</title>
+<meta name="description" content="Guide a floating loaf of cat through the clouds in Sky Loaf, a mini game on I Love Meow.">
+<link rel="canonical" href="https://ilovemeow.app/game-flyer.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Sky Loaf — I Love Meow">
+<meta property="og:description" content="Guide a floating loaf of cat through the clouds in Sky Loaf, a mini game on I Love Meow.">
+<meta property="og:url" content="https://ilovemeow.app/game-flyer.html">
+<meta property="og:image" content="https://ilovemeow.app/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Sky Loaf — I Love Meow">
+<meta name="twitter:description" content="Guide a floating loaf of cat through the clouds in Sky Loaf, a mini game on I Love Meow.">
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Poppins:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css">
+<script>(function(){var t=localStorage.getItem("ilm_theme")||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",t);})();</script>
+</head>
+<body>
+<div class="bg-blobs" id="bg-blobs"></div>
+<div class="mobile-dock" id="mobile-dock"></div>
+<div class="nav-shell"><nav class="app-nav" id="app-nav"></nav></div>
+
+<div class="game-shell page">
+  <a href="/games.html" class="back-home">← Back to Meow Arcade</a>
+  <div class="game-topbar">
+    <div class="stat">🏆 <span id="hud-score">0</span></div>
+    <div class="stat">🐟 <span id="hud-coins">0</span></div>
+    <div class="stat" id="hud-power" style="opacity:.6;"></div>
+  </div>
+
+  <div class="game-canvas-wrap" id="canvas-wrap">
+    <canvas id="game-canvas" width="450" height="650"></canvas>
+
+    <div class="game-overlay" id="overlay-start">
+      <h2>🐈‍⬛ Sky Loaf</h2>
+      <p style="opacity:.8; max-width:300px; font-size:13.5px;">Tap, click, or press Space to flap. Dodge the clouds, grab Fish Coins and stars ⭐, and grab power-ups: 🛡️ Shield, 🧲 Magnet, 🌈 Rainbow Dash.</p>
+      <p style="font-size:12.5px; opacity:.6;">Speed picks up the longer you survive.</p>
+      <button class="btn btn-primary" id="start-btn" style="margin-top:6px;">Start flying</button>
+    </div>
+
+    <div class="game-overlay" id="overlay-pause" style="display:none;">
+      <h2>Paused</h2>
+      <button class="btn btn-primary" id="resume-btn">Resume</button>
+      <button class="btn btn-ghost" id="quit-btn" style="background:rgba(255,255,255,0.15); color:#fff;">Quit</button>
+    </div>
+
+    <div class="game-overlay" id="overlay-end" style="display:none;">
+      <h2>Splashdown! 🌊</h2>
+      <div style="font-size:15px;">Score: <b id="end-score">0</b></div>
+      <div style="font-size:13px; opacity:.8;">Fish Coins collected: <span id="end-coins">0</span></div>
+      <div style="font-size:13px; opacity:.9;" id="end-rewards"></div>
+      <div id="end-achievements" style="display:flex; gap:8px; flex-wrap:wrap; justify-content:center; max-width:320px;"></div>
+      <div style="display:flex; gap:10px; margin-top:8px;">
+        <button class="btn btn-primary" id="play-again-btn">Fly again</button>
+        <a href="/games.html" class="btn btn-ghost" style="background:rgba(255,255,255,0.15); color:#fff;">Arcade</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="game-controls-row">
+    <button class="game-icon-btn" id="pause-btn" title="Pause" aria-label="Pause game">⏸️</button>
+    <button class="game-icon-btn" id="mute-btn" title="Mute" aria-label="Mute sound">🔊</button>
+  </div>
+</div>
+
+<script src="/app.js"></script>
+<script>
+  if (!Meow.requireAuth()) { throw new Error('redirecting'); }
+  Meow.renderNav('games');
+
+  const canvas = document.getElementById('game-canvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+
+  // ---- Sound ----
+  let audioCtx = null, muted = false;
+  function beep(freq, durationMs, type = 'sine', vol = 0.15) {
+    if (muted) return;
+    try {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = type; osc.frequency.value = freq;
+      gain.gain.value = vol;
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.start();
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + durationMs / 1000);
+      osc.stop(audioCtx.currentTime + durationMs / 1000);
+    } catch (e) { /* silent fallback */ }
+  }
+
+  // ---- State ----
+  let state = 'idle';
+  let cat = { x: 110, y: H / 2, vy: 0, trail: [] };
+  const GRAVITY = 0.45;
+  const FLAP_V = -8;
+  let obstacles = []; // {x, gapY, gapH, passed}
+  let coins = [];      // {x, y, taken}
+  let stars = [];       // {x, y, taken} — bonus score only, separate from Fish Coins
+  let powerups = [];   // {x, y, type: 'shield'|'magnet'|'dash', taken}
+  let shieldActive = false, magnetUntil = 0, dashUntil = 0;
+  let score = 0, coinsCollected = 0;
+  let elapsed = 0, lastTs = 0, sessionId = null, startedAt = 0;
+  let speed = 3.2;
+  let nextObstacleAt = 0, nextPowerupAt = 0, nextStarAt = 0;
+  let rafId = null;
+
+  function reset() {
+    cat = { x: 110, y: H / 2, vy: 0, trail: [] };
+    obstacles = []; coins = []; stars = []; powerups = [];
+    shieldActive = false; magnetUntil = 0; dashUntil = 0;
+    score = 0; coinsCollected = 0; elapsed = 0; speed = 3.2;
+    nextObstacleAt = 900; nextPowerupAt = 6000; nextStarAt = 3500;
+    updateHud();
+  }
+
+  function updateHud() {
+    document.getElementById('hud-score').textContent = Math.floor(score);
+    document.getElementById('hud-coins').textContent = coinsCollected;
+    const now = performance.now();
+    document.getElementById('hud-power').textContent =
+      shieldActive ? '🛡️ Shield' : (now < magnetUntil ? '🧲 Magnet' : (now < dashUntil ? '🌈 Rainbow Dash' : ''));
+  }
+
+  function drawMascot() {
+    const { x, y } = cat;
+    // colorful trail
+    cat.trail.push({ x, y, life: 1 });
+    if (cat.trail.length > 16) cat.trail.shift();
+    cat.trail.forEach((t, i) => {
+      t.life -= 0.07;
+      ctx.globalAlpha = Math.max(0, t.life) * 0.5;
+      ctx.fillStyle = ['#FF8A00', '#FFC7D6', '#8F7CFF', '#64D27A'][i % 4];
+      ctx.beginPath(); ctx.arc(t.x - 6, t.y, 5, 0, Math.PI * 2); ctx.fill();
+    });
+    ctx.globalAlpha = 1;
+
+    const tilt = Math.max(-0.4, Math.min(0.6, cat.vy / 12));
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(tilt);
+    // body
+    ctx.fillStyle = '#FF8A00';
+    ctx.beginPath(); ctx.ellipse(0, 0, 20, 15, 0, 0, Math.PI * 2); ctx.fill();
+    // ears
+    ctx.beginPath(); ctx.moveTo(-14, -12); ctx.lineTo(-20, -24); ctx.lineTo(-4, -16); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(14, -12); ctx.lineTo(20, -24); ctx.lineTo(4, -16); ctx.closePath(); ctx.fill();
+    // face
+    ctx.fillStyle = '#1D1D1D';
+    ctx.beginPath(); ctx.arc(8, -3, 2.2, 0, Math.PI * 2); ctx.fill();
+    // tail
+    ctx.strokeStyle = '#FF8A00'; ctx.lineWidth = 6; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(-18, 6); ctx.quadraticCurveTo(-32, 2, -30, -10); ctx.stroke();
+    if (shieldActive) {
+      ctx.strokeStyle = 'rgba(100,210,122,0.8)'; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(0, 0, 28, 0, Math.PI * 2); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawBackground() {
+    const grad = ctx.createLinearGradient(0, 0, 0, H);
+    grad.addColorStop(0, '#3A2A4A'); grad.addColorStop(1, '#1E1B24');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  function spawnObstacle() {
+    const gapH = Math.max(150, 230 - elapsed / 400);
+    const gapY = 80 + Math.random() * (H - 160 - gapH);
+    obstacles.push({ x: W + 40, gapY, gapH, passed: false });
+    if (Math.random() < 0.7) coins.push({ x: W + 40, y: gapY + gapH / 2, taken: false });
+  }
+
+  function spawnPowerup() {
+    const roll = Math.random();
+    const type = roll < 0.34 ? 'shield' : (roll < 0.67 ? 'magnet' : 'dash');
+    powerups.push({ x: W + 40, y: 80 + Math.random() * (H - 160), type, taken: false });
+  }
+
+  function spawnStar() {
+    stars.push({ x: W + 40, y: 60 + Math.random() * (H - 120), taken: false });
+  }
+
+  function drawObstacle(o) {
+    ctx.fillStyle = '#6B5C7C';
+    ctx.beginPath();
+    ctx.roundRect(o.x - 34, -10, 68, o.gapY + 10, 16);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.roundRect(o.x - 34, o.gapY + o.gapH, 68, H - (o.gapY + o.gapH) + 10, 16);
+    ctx.fill();
+  }
+
+  function circleHit(ax, ay, ar, bx, by, br) {
+    const dx = ax - bx, dy = ay - by;
+    return Math.sqrt(dx * dx + dy * dy) < ar + br;
+  }
+
+  function step(dt) {
+    elapsed += dt;
+    speed = Math.min(8.5, 3.2 + elapsed / 9000);
+    score += dt * 0.01 * speed;
+
+    cat.vy += GRAVITY;
+    cat.y += cat.vy;
+    if (cat.y < 16) { cat.y = 16; cat.vy = 0; }
+    if (cat.y > H - 16) { crash(); return; }
+
+    nextObstacleAt -= dt;
+    if (nextObstacleAt <= 0) { spawnObstacle(); nextObstacleAt = Math.max(750, 1500 - elapsed / 60); }
+    nextPowerupAt -= dt;
+    if (nextPowerupAt <= 0) { spawnPowerup(); nextPowerupAt = 7000 + Math.random() * 4000; }
+    nextStarAt -= dt;
+    if (nextStarAt <= 0) { spawnStar(); nextStarAt = 4500 + Math.random() * 3000; }
+
+    const now = performance.now();
+    const magnetActive = now < magnetUntil;
+    const dashActive = now < dashUntil;
+    const effectiveSpeed = dashActive ? speed * 1.6 : speed;
+
+    for (const o of obstacles) {
+      o.x -= effectiveSpeed;
+      if (!o.passed && o.x < cat.x) { o.passed = true; score += 15; }
+      const hitTop = cat.x + 16 > o.x - 34 && cat.x - 16 < o.x + 34 && cat.y - 14 < o.gapY;
+      const hitBottom = cat.x + 16 > o.x - 34 && cat.x - 16 < o.x + 34 && cat.y + 14 > o.gapY + o.gapH;
+      if (hitTop || hitBottom) {
+        if (shieldActive) { shieldActive = false; o.passed = true; beep(300, 150, 'square', 0.15); spawnParticles(cat.x, cat.y, '#64D27A'); }
+        else if (dashActive) { o.passed = true; /* rainbow dash grants brief invincibility */ }
+        else { crash(); return; }
+      }
+    }
+    obstacles = obstacles.filter(o => o.x > -60);
+
+    for (const c of coins) {
+      if (c.taken) continue;
+      c.x -= effectiveSpeed;
+      if (magnetActive) {
+        const dx = cat.x - c.x, dy = cat.y - c.y;
+        c.x += dx * 0.08; c.y += dy * 0.08;
+      }
+      if (circleHit(cat.x, cat.y, 16, c.x, c.y, 10)) {
+        c.taken = true; coinsCollected++; score += 5;
+        beep(1046, 100, 'triangle', 0.12);
+        spawnParticles(c.x, c.y, '#FFCC4D');
+        spawnFloatScore(c.x, c.y, '+5 🐟');
+      }
+    }
+    coins = coins.filter(c => !c.taken && c.x > -30);
+
+    for (const s of stars) {
+      if (s.taken) continue;
+      s.x -= effectiveSpeed;
+      if (magnetActive) {
+        const dx = cat.x - s.x, dy = cat.y - s.y;
+        s.x += dx * 0.08; s.y += dy * 0.08;
+      }
+      if (circleHit(cat.x, cat.y, 16, s.x, s.y, 10)) {
+        s.taken = true; score += 25;
+        beep(1318, 110, 'triangle', 0.14);
+        spawnParticles(s.x, s.y, '#8F7CFF');
+        spawnFloatScore(s.x, s.y, '+25 ⭐');
+      }
+    }
+    stars = stars.filter(s => !s.taken && s.x > -30);
+
+    for (const p of powerups) {
+      if (p.taken) continue;
+      p.x -= effectiveSpeed;
+      if (circleHit(cat.x, cat.y, 16, p.x, p.y, 12)) {
+        p.taken = true;
+        if (p.type === 'shield') shieldActive = true;
+        else if (p.type === 'magnet') magnetUntil = now + 6000;
+        else dashUntil = now + 3500;
+        beep(660, 160, 'sine', 0.15);
+        spawnParticles(p.x, p.y, p.type === 'shield' ? '#64D27A' : (p.type === 'magnet' ? '#8F7CFF' : '#FF7A45'));
+      }
+    }
+    powerups = powerups.filter(p => !p.taken && p.x > -30);
+
+    updateHud();
+  }
+
+  // ---- Juice: particle bursts, floating score popups, screen shake ----
+  let particles = [];
+  function spawnParticles(x, y, color) {
+    for (let i = 0; i < 10; i++) {
+      particles.push({
+        x, y, color,
+        vx: -2 + Math.random() * 4, vy: -3 + Math.random() * 3,
+        life: 1,
+      });
+    }
+  }
+  function stepParticles() {
+    particles.forEach(p => { p.x += p.vx; p.y += p.vy; p.vy += 0.15; p.life -= 0.035; });
+    particles = particles.filter(p => p.life > 0);
+  }
+  function drawParticles() {
+    particles.forEach(p => {
+      ctx.globalAlpha = Math.max(0, p.life);
+      ctx.fillStyle = p.color;
+      ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, Math.PI * 2); ctx.fill();
+    });
+    ctx.globalAlpha = 1;
+  }
+
+  function spawnFloatScore(x, y, text) {
+    const wrap = document.getElementById('canvas-wrap');
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = rect.width / W, scaleY = rect.height / H;
+    const el = document.createElement('div');
+    el.className = 'float-score';
+    el.textContent = text;
+    el.style.left = (x * scaleX) + 'px';
+    el.style.top = (y * scaleY) + 'px';
+    wrap.appendChild(el);
+    setTimeout(() => el.remove(), 820);
+  }
+
+  function shakeScreen() {
+    const wrap = document.getElementById('canvas-wrap');
+    wrap.classList.remove('screen-shake'); void wrap.offsetWidth; wrap.classList.add('screen-shake');
+  }
+
+  function drawStar(s) {
+    ctx.save();
+    ctx.translate(s.x, s.y);
+    ctx.fillStyle = '#FFD24D';
+    ctx.beginPath();
+    for (let i = 0; i < 5; i++) {
+      const a = (Math.PI * 2 * i) / 5 - Math.PI / 2;
+      const a2 = a + Math.PI / 5;
+      ctx.lineTo(Math.cos(a) * 10, Math.sin(a) * 10);
+      ctx.lineTo(Math.cos(a2) * 4, Math.sin(a2) * 4);
+    }
+    ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawCoin(c) {
+    ctx.fillStyle = '#FFCC4D';
+    ctx.beginPath(); ctx.arc(c.x, c.y, 10, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#B8860B';
+    ctx.font = '700 11px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('🐟', c.x, c.y + 1);
+  }
+
+  function drawPowerup(p) {
+    const colors = { shield: 'rgba(100,210,122,0.9)', magnet: 'rgba(143,124,255,0.9)', dash: 'rgba(255,122,69,0.9)' };
+    const icons = { shield: '🛡️', magnet: '🧲', dash: '🌈' };
+    ctx.fillStyle = colors[p.type];
+    ctx.beginPath(); ctx.arc(p.x, p.y, 13, 0, Math.PI * 2); ctx.fill();
+    ctx.font = '13px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(icons[p.type], p.x, p.y + 1);
+  }
+
+  function render() {
+    drawBackground();
+    obstacles.forEach(drawObstacle);
+    coins.forEach(drawCoin);
+    stars.forEach(drawStar);
+    powerups.forEach(drawPowerup);
+    stepParticles();
+    drawParticles();
+    drawMascot();
+  }
+
+  function loop(ts) {
+    if (state !== 'playing') return;
+    if (!lastTs) lastTs = ts;
+    const dt = Math.min(40, ts - lastTs);
+    lastTs = ts;
+    step(dt);
+    render();
+    rafId = requestAnimationFrame(loop);
+  }
+
+  function flap() {
+    if (state !== 'playing') return;
+    cat.vy = FLAP_V;
+    beep(520, 60, 'square', 0.08);
+  }
+
+  async function startGame() {
+    try {
+      const { session_id } = await Meow.api('/api/games/session', { method: 'POST', body: { game: 'flyer', difficulty: 'default' } });
+      sessionId = session_id;
+    } catch (err) { Meow.toast(err.message); return; }
+    reset();
+    state = 'playing';
+    lastTs = 0;
+    startedAt = performance.now();
+    document.getElementById('overlay-start').style.display = 'none';
+    document.getElementById('overlay-end').style.display = 'none';
+    rafId = requestAnimationFrame(loop);
+  }
+
+  function pauseGame() {
+    if (state !== 'playing') return;
+    state = 'paused';
+    cancelAnimationFrame(rafId);
+    document.getElementById('overlay-pause').style.display = 'flex';
+  }
+  function resumeGame() {
+    if (state !== 'paused') return;
+    state = 'playing';
+    lastTs = 0;
+    document.getElementById('overlay-pause').style.display = 'none';
+    rafId = requestAnimationFrame(loop);
+  }
+  function quitToStart() {
+    cancelAnimationFrame(rafId);
+    state = 'idle';
+    document.getElementById('overlay-pause').style.display = 'none';
+    document.getElementById('overlay-start').style.display = 'flex';
+  }
+
+  async function crash() {
+    if (state !== 'playing') return;
+    state = 'ended';
+    cancelAnimationFrame(rafId);
+    beep(140, 300, 'sawtooth', 0.18);
+    spawnParticles(cat.x, cat.y, '#FF7A45');
+    shakeScreen();
+    const durationMs = Math.round(performance.now() - startedAt);
+    const finalScore = Math.floor(score);
+    document.getElementById('end-score').textContent = finalScore;
+    document.getElementById('end-coins').textContent = coinsCollected;
+    document.getElementById('overlay-end').style.display = 'flex';
+    document.getElementById('end-rewards').textContent = 'Submitting score…';
+    document.getElementById('end-achievements').innerHTML = '';
+    try {
+      const result = await Meow.api('/api/games/scores', {
+        method: 'POST',
+        body: { session_id: sessionId, score: finalScore, coins_collected: coinsCollected, duration_ms: durationMs },
+      });
+      document.getElementById('end-rewards').textContent = `+${result.xp_earned} XP · +${result.coins_earned} 🐟 Fish Coins${result.challengeCompleted ? ' · Daily Challenge complete!' : ''}`;
+      if (result.newAchievements && result.newAchievements.length) {
+        document.getElementById('end-achievements').innerHTML = result.newAchievements.map(a =>
+          `<span class="badge">${a.icon} ${Meow.escapeHtml(a.name)}</span>`
+        ).join('');
+      }
+      Meow.user = result.user;
+    } catch (err) {
+      document.getElementById('end-rewards').textContent = "Couldn't save this score — it may have expired.";
+    }
+  }
+
+  // ---- Input ----
+  canvas.addEventListener('pointerdown', flap);
+  document.addEventListener('keydown', (e) => {
+    if (e.code === 'Space' || e.key === 'ArrowUp') { e.preventDefault(); flap(); }
+  });
+
+  document.getElementById('start-btn').addEventListener('click', startGame);
+  document.getElementById('play-again-btn').addEventListener('click', startGame);
+  document.getElementById('pause-btn').addEventListener('click', pauseGame);
+  document.getElementById('resume-btn').addEventListener('click', resumeGame);
+  document.getElementById('quit-btn').addEventListener('click', quitToStart);
+  document.getElementById('mute-btn').addEventListener('click', (e) => {
+    muted = !muted;
+    e.target.textContent = muted ? '🔇' : '🔊';
+  });
+
+  reset();
+  drawBackground();
+  drawMascot();
+</script>
+</body>
+</html>

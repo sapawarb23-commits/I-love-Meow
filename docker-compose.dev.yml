@@ -1,0 +1,33 @@
+# Local development override — bind-mounts source for live reload and
+# skips nginx/SSL/certbot (not needed on localhost). Usage:
+#
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up app redis
+#
+# Talk to the app directly at http://localhost:3000 (no reverse proxy).
+
+services:
+  app:
+    build:
+      target: runtime
+    command: ["node", "--watch", "server.js"]
+    environment:
+      NODE_ENV: development
+    volumes:
+      - ./server.js:/app/server.js:ro
+      - ./db.js:/app/db.js:ro
+      - ./auth.js:/app/auth.js:ro
+      - ./validate.js:/app/validate.js:ro
+      - ./security.js:/app/security.js:ro
+      - ./games.js:/app/games.js:ro
+      - ./breeds.js:/app/breeds.js:ro
+      - ./health.js:/app/health.js:ro
+      - ./logger.js:/app/logger.js:ro
+      - ./metrics.js:/app/metrics.js:ro
+      - ./redis.js:/app/redis.js:ro
+      - ./rateLimit.js:/app/rateLimit.js:ro
+      - ./sentry.js:/app/sentry.js:ro
+      - ./cloudinary.js:/app/cloudinary.js:ro
+      - ./public:/app/public:ro
+      - db-data:/app/data
+    ports:
+      - "3000:3000"

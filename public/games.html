@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cat Arcade — I Love Meow</title>
+<meta name="description" content="Play cozy cat-themed arcade games, complete daily challenges, and climb the leaderboard on I Love Meow.">
+<link rel="canonical" href="https://ilovemeow.app/games.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Cat Arcade — I Love Meow">
+<meta property="og:description" content="Play cozy cat-themed arcade games, complete daily challenges, and climb the leaderboard on I Love Meow.">
+<meta property="og:url" content="https://ilovemeow.app/games.html">
+<meta property="og:image" content="https://ilovemeow.app/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Cat Arcade — I Love Meow">
+<meta name="twitter:description" content="Play cozy cat-themed arcade games, complete daily challenges, and climb the leaderboard on I Love Meow.">
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Poppins:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css">
+<script>(function(){var t=localStorage.getItem("ilm_theme")||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",t);})();</script>
+</head>
+<body>
+<div class="bg-blobs" id="bg-blobs"></div>
+<div class="mobile-dock" id="mobile-dock"></div>
+<div class="nav-shell"><nav class="app-nav" id="app-nav"></nav></div>
+
+<div class="wrap page" style="padding-top:8px; max-width:1080px;">
+
+  <!-- HERO / ARCADE SIGN -->
+  <div class="arcade-hero arcade-in">
+    <span class="arcade-float-deco" style="top:14px; left:8%; animation-delay:.2s;">🐾</span>
+    <span class="arcade-float-deco" style="top:60%; left:4%; animation-delay:1.4s;">🐟</span>
+    <span class="arcade-float-deco" style="top:20px; right:9%; animation-delay:.8s;">🐾</span>
+    <span class="arcade-float-deco" style="bottom:10px; right:5%; animation-delay:2.1s;">✨</span>
+    <div class="arcade-sign">🕹️ CAT ARCADE 🕹️</div>
+    <div class="tagline">Play a round before you scroll — earn XP, Fish Coins, and bragging rights.</div>
+    <div class="arcade-hero-stats" id="hero-stats">
+      <div class="arcade-chip">
+        <div class="lvl-ring" id="hero-lvl-ring" style="--pct:0;"><span id="hero-lvl-num">1</span></div>
+        <div><b id="hero-lvl-name">Curious Kitten I</b><small id="hero-lvl-sub">0 / 25 XP</small></div>
+      </div>
+      <div class="arcade-chip"><span style="font-size:18px;">🐟</span><div><b id="hero-coins">0</b><small>Fish Coins</small></div></div>
+      <div class="arcade-chip"><span style="font-size:18px;">🎮</span><div><b id="hero-plays">0</b><small>Games played</small></div></div>
+      <div class="arcade-chip"><span style="font-size:18px;">🏆</span><div><b id="hero-achv">0</b><small>Achievements</small></div></div>
+    </div>
+  </div>
+
+  <!-- FEATURED GAME -->
+  <div class="arcade-featured arcade-in d1" id="featured-card">
+    <div class="feat-emoji" id="feat-emoji">🥁</div>
+    <div style="flex:1; min-width:220px;">
+      <span class="feat-badge">⭐ Featured today</span>
+      <h3 id="feat-title">Paw Percussion</h3>
+      <p id="feat-desc">Tap the beat as paws fall down the lanes. Chain hits for combo multipliers.</p>
+      <a href="#" id="feat-play-btn" class="btn">Play now</a>
+    </div>
+  </div>
+
+  <!-- SEASONAL EVENT -->
+  <div class="arcade-seasonal arcade-in d2" style="margin-top:16px;" id="seasonal-banner">
+    <div class="season-emoji" id="season-emoji">🌸</div>
+    <div>
+      <h4 id="season-title">Seasonal Event</h4>
+      <p id="season-desc">Loading…</p>
+    </div>
+  </div>
+
+  <!-- WEEKLY TOURNAMENT -->
+  <div class="arcade-tournament arcade-in d2" style="margin-top:16px;">
+    <div>
+      <h4>🏆 Weekly Tournament</h4>
+      <p>This week's leaderboard resets every 7 days. Top players earn bragging rights and a spot on the podium.</p>
+    </div>
+    <div class="trophy-row" id="tournament-top3">🥇 — · 🥈 — · 🥉 —</div>
+  </div>
+
+  <!-- GAME COLLECTION -->
+  <div class="arcade-section-title"><span>🎮 Game Collection</span><span class="line"></span></div>
+  <div class="games-grid" id="games-grid">
+    <div class="card game-tile rhythm-tile arcade-in d1">
+      <span class="tile-emoji">🥁</span>
+      <span class="best-score-pill" id="rhythm-best-pill">Best: —</span>
+      <h3>Bongo Cat: Paw Percussion</h3>
+      <p>Tap the beat as paws fall down the lanes. Build combos, chase the multiplier.</p>
+      <a href="/game-rhythm.html" class="btn">Play now</a>
+    </div>
+    <div class="card game-tile flyer-tile arcade-in d2">
+      <span class="tile-emoji">🐈‍⬛</span>
+      <span class="best-score-pill" id="flyer-best-pill">Best: —</span>
+      <h3>Nyan Cat Runner: Sky Loaf</h3>
+      <p>An endless flight — dodge obstacles, grab Fish Coins &amp; stars, ride the rainbow.</p>
+      <a href="/game-flyer.html" class="btn">Play now</a>
+    </div>
+    <div class="card game-tile locked-tile arcade-in d3">
+      <span class="tile-emoji">🧩</span>
+      <h3>Cat Memory Match</h3>
+      <span class="soon-badge">Coming soon</span>
+    </div>
+    <div class="card game-tile locked-tile arcade-in d3">
+      <span class="tile-emoji">🖱️</span>
+      <h3>Laser Chase</h3>
+      <span class="soon-badge">Coming soon</span>
+    </div>
+    <div class="card game-tile locked-tile arcade-in d4">
+      <span class="tile-emoji">🐭</span>
+      <h3>Mouse Hunter</h3>
+      <span class="soon-badge">Coming soon</span>
+    </div>
+    <div class="card game-tile locked-tile arcade-in d4">
+      <span class="tile-emoji">🎣</span>
+      <h3>Fishing Frenzy</h3>
+      <span class="soon-badge">Coming soon</span>
+    </div>
+  </div>
+
+  <div class="hub-row">
+    <div>
+      <div class="card lift daily-challenge-card arcade-in d2" style="margin-top:24px; margin-bottom:20px;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+          <div>
+            <span class="badge">📅 Daily Challenge</span>
+            <h3 class="cute" style="font-size:18px; margin:8px 0 4px;" id="challenge-desc">Loading…</h3>
+          </div>
+          <span id="challenge-status" style="font-size:22px;"></span>
+        </div>
+        <div class="challenge-progress-track"><div class="challenge-progress-fill" id="challenge-fill" style="width:0%;"></div></div>
+        <p style="font-size:12px; opacity:.6; margin-top:8px;" id="challenge-sub"></p>
+      </div>
+
+      <div class="card lift arcade-in d3" style="margin-bottom:20px;">
+        <h3 class="cute" style="font-size:18px; margin-bottom:12px;">Leaderboards</h3>
+        <div style="display:flex; gap:8px; margin-bottom:10px;">
+          <select class="filter-select" id="lb-game">
+            <option value="rhythm">🥁 Paw Percussion</option>
+            <option value="flyer">🐈‍⬛ Sky Loaf</option>
+          </select>
+        </div>
+        <div class="period-tabs" id="lb-period">
+          <button data-period="daily" class="active">Today</button>
+          <button data-period="weekly">This week</button>
+          <button data-period="alltime">All-time</button>
+        </div>
+        <div id="leaderboard-list"></div>
+      </div>
+
+      <div class="card lift arcade-in d4">
+        <h3 class="cute" style="font-size:18px; margin-bottom:12px;">Achievements</h3>
+        <div class="achv-grid" id="achv-grid"></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card lift arcade-in d3" style="margin-top:24px; margin-bottom:20px;">
+        <h3 class="cute" style="font-size:16px; margin-bottom:12px;">Your progress</h3>
+        <div class="level-badge-lg">
+          <div class="level-circle" id="level-circle" style="--pct:0;"><span id="level-num">1</span></div>
+          <div>
+            <div style="font-weight:700; font-size:14px;" id="level-label">Level 1</div>
+            <div style="font-size:12px; opacity:.6;" id="level-sub">0 / 25 XP</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card lift arcade-in d4" style="margin-bottom:20px;">
+        <h3 class="cute" style="font-size:16px; margin-bottom:10px;">Game Statistics</h3>
+        <div class="stat-row" id="stats-row" style="justify-content:space-between;">
+          <div><b id="stat-plays">0</b>Plays</div>
+          <div><b id="stat-coins">0</b>Coins earned</div>
+          <div><b id="stat-xp">0</b>XP earned</div>
+        </div>
+      </div>
+
+      <div class="card lift arcade-in d5">
+        <h3 class="cute" style="font-size:16px; margin-bottom:10px;">Recently played</h3>
+        <div id="recent-list" style="display:flex; flex-direction:column; gap:8px;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/app.js"></script>
+<script>
+  if (!Meow.requireAuth()) { throw new Error('redirecting'); }
+  Meow.renderNav('games');
+
+  const GAME_LABEL = { rhythm: '🥁 Paw Percussion', flyer: '🐈\u200d⬛ Sky Loaf' };
+
+  // ---- Featured game: deterministic pick per calendar day, same trick the
+  // backend's daily challenge uses, so it feels curated without needing its
+  // own server endpoint. ----
+  const FEATURED_POOL = [
+    { game: 'rhythm', emoji: '🥁', title: 'Bongo Cat: Paw Percussion', desc: 'Tap the beat as paws fall down the lanes. Chain hits for combo multipliers.', href: '/game-rhythm.html' },
+    { game: 'flyer', emoji: '🐈\u200d⬛', title: 'Nyan Cat Runner: Sky Loaf', desc: 'Dodge obstacles, grab Fish Coins & stars, and ride the rainbow as far as you can.', href: '/game-flyer.html' },
+  ];
+  function pickFeatured() {
+    const dateStr = new Date().toISOString().slice(0, 10);
+    let hash = 0;
+    for (let i = 0; i < dateStr.length; i++) hash = (hash * 31 + dateStr.charCodeAt(i)) >>> 0;
+    return FEATURED_POOL[hash % FEATURED_POOL.length];
+  }
+  function renderFeatured() {
+    const f = pickFeatured();
+    document.getElementById('feat-emoji').textContent = f.emoji;
+    document.getElementById('feat-title').textContent = f.title;
+    document.getElementById('feat-desc').textContent = f.desc;
+    document.getElementById('feat-play-btn').href = f.href;
+  }
+
+  // ---- Seasonal event: cosmetic, computed from the real calendar month —
+  // no fabricated bonus multipliers, just a themed banner + reskinned tile emoji. ----
+  function renderSeasonal() {
+    const month = new Date().getMonth(); // 0-11
+    let season;
+    if ([11, 0, 1].includes(month)) season = { emoji: '❄️', title: 'Winter Whiskers', desc: 'Cozy season is here — the Arcade is dressed up in frosty paw prints through the end of winter.' };
+    else if ([2, 3, 4].includes(month)) season = { emoji: '🌸', title: 'Spring Bloom Festival', desc: 'Petals are drifting through the Arcade this spring. Keep playing daily to build your streak.' };
+    else if ([5, 6, 7].includes(month)) season = { emoji: '🐟', title: 'Summer Fish Festival', desc: 'Warm weather, warm vibes — the Arcade is celebrating summer with a Fish Coin theme.' };
+    else season = { emoji: '🍂', title: 'Autumn Harvest', desc: 'Leaves are falling around the Arcade as the year winds down. Cozy up and play a round.' };
+    document.getElementById('season-emoji').textContent = season.emoji;
+    document.getElementById('season-title').textContent = season.title;
+    document.getElementById('season-desc').textContent = season.desc;
+  }
+
+  function fillLevel(lp) {
+    document.getElementById('level-circle').style.setProperty('--pct', lp.progressPct);
+    document.getElementById('level-num').textContent = lp.level;
+    document.getElementById('level-label').textContent = lp.tierName;
+    document.getElementById('level-sub').textContent = `Level ${lp.level} · ${lp.pointsIntoLevel} / ${lp.pointsForNextLevel} XP to next level`;
+
+    document.getElementById('hero-lvl-ring').style.setProperty('--pct', lp.progressPct);
+    document.getElementById('hero-lvl-num').textContent = lp.level;
+    document.getElementById('hero-lvl-name').textContent = lp.tierName;
+    document.getElementById('hero-lvl-sub').textContent = `${lp.pointsIntoLevel} / ${lp.pointsForNextLevel} XP`;
+  }
+
+  function renderAchievements(list) {
+    const grid = document.getElementById('achv-grid');
+    grid.innerHTML = list.map(a => `
+      <div class="achv-tile ${a.unlocked ? 'unlocked' : ''}" title="${a.unlocked ? 'Unlocked' : 'Locked'}">
+        <div class="achv-icon">${a.icon}</div>
+        <div class="achv-name">${Meow.escapeHtml(a.name)}</div>
+        <div class="achv-desc">${Meow.escapeHtml(a.description)}</div>
+      </div>
+    `).join('');
+    document.getElementById('hero-achv').textContent = list.filter(a => a.unlocked).length;
+  }
+
+  function renderRecent(list) {
+    const el = document.getElementById('recent-list');
+    if (!list.length) { el.innerHTML = `<p style="font-size:13px; opacity:.6;">No games played yet — jump in!</p>`; return; }
+    el.innerHTML = list.map(r => `
+      <div style="display:flex; justify-content:space-between; font-size:13px;">
+        <span>${GAME_LABEL[r.game] || r.game}${r.difficulty && r.difficulty !== 'default' ? ' · ' + r.difficulty : ''}</span>
+        <b>${r.score}</b>
+      </div>
+    `).join('');
+  }
+
+  async function loadHub() {
+    try {
+      const hub = await Meow.api('/api/games/hub');
+      document.getElementById('rhythm-best-pill').textContent = `Best: ${hub.bestScores.rhythm || 0}`;
+      document.getElementById('flyer-best-pill').textContent = `Best: ${hub.bestScores.flyer || 0}`;
+      document.getElementById('stat-plays').textContent = hub.stats.totalPlays;
+      document.getElementById('stat-coins').textContent = hub.stats.totalCoins;
+      document.getElementById('stat-xp').textContent = hub.stats.totalXp;
+      document.getElementById('hero-plays').textContent = hub.stats.totalPlays;
+      document.getElementById('hero-coins').textContent = (Meow.user && Meow.user.fish_coins) ?? hub.stats.totalCoins;
+      fillLevel(hub.levelProgress);
+      renderAchievements(hub.achievements);
+      renderRecent(hub.recentlyPlayed);
+
+      const c = hub.dailyChallenge;
+      document.getElementById('challenge-desc').textContent = c.description;
+      document.getElementById('challenge-status').textContent = c.completed ? '✅' : '⏳';
+      document.getElementById('challenge-fill').style.width = c.completed ? '100%' : '0%';
+      document.getElementById('challenge-sub').textContent = c.completed
+        ? 'Completed today — come back tomorrow for a new one!'
+        : `Play ${GAME_LABEL[c.game]} and hit the target score to complete it.`;
+    } catch (err) { Meow.toast(err.message); }
+  }
+
+  async function loadTournamentTop3() {
+    try {
+      const { leaderboard } = await Meow.api(`/api/games/leaderboard?game=${lbGame}&period=weekly`);
+      const medals = ['🥇', '🥈', '🥉'];
+      const el = document.getElementById('tournament-top3');
+      if (!leaderboard.length) { el.textContent = 'No scores yet this week — be the first!'; return; }
+      el.innerHTML = leaderboard.slice(0, 3).map((r, i) => `${medals[i]} @${Meow.escapeHtml(r.username)}`).join(' &nbsp;·&nbsp; ');
+    } catch (err) { /* non-critical widget — fail quietly */ }
+  }
+
+  let lbGame = 'rhythm';
+  let lbPeriod = 'daily';
+  async function loadLeaderboard() {
+    const listEl = document.getElementById('leaderboard-list');
+    listEl.innerHTML = Meow.loadingCatHtml('Fetching scores…');
+    try {
+      const { leaderboard } = await Meow.api(`/api/games/leaderboard?game=${lbGame}&period=${lbPeriod}`);
+      if (!leaderboard.length) {
+        listEl.innerHTML = `<p style="font-size:13px; opacity:.6; padding:8px 0;">No scores yet for this period — be the first!</p>`;
+        return;
+      }
+      listEl.innerHTML = leaderboard.map(r => `
+        <div class="leaderboard-row ${r.username === Meow.user.username ? 'me' : ''}">
+          <span class="leaderboard-rank ${r.rank === 1 ? 'top1' : ''}">${r.rank === 1 ? '🥇' : r.rank === 2 ? '🥈' : r.rank === 3 ? '🥉' : r.rank}</span>
+          <span class="avatar-emoji" style="width:26px;height:26px;font-size:13px;">${r.avatar_emoji || '🐱'}</span>
+          <span style="flex:1; font-size:13.5px; font-weight:600;">@${Meow.escapeHtml(r.username)}</span>
+          <b>${r.best_score}</b>
+        </div>
+      `).join('');
+    } catch (err) { listEl.innerHTML = ''; Meow.toast(err.message); }
+  }
+
+  document.getElementById('lb-game').addEventListener('change', e => { lbGame = e.target.value; loadLeaderboard(); loadTournamentTop3(); });
+  document.querySelectorAll('#lb-period button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#lb-period button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      lbPeriod = btn.dataset.period;
+      loadLeaderboard();
+    });
+  });
+
+  renderFeatured();
+  renderSeasonal();
+  loadHub();
+  loadLeaderboard();
+  loadTournamentTop3();
+</script>
+</body>
+</html>

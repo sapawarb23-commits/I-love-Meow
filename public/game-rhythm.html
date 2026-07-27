@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Paw Percussion — I Love Meow</title>
+<meta name="description" content="Tap along to the beat in Paw Percussion, a cat-themed rhythm game on I Love Meow.">
+<link rel="canonical" href="https://ilovemeow.app/game-rhythm.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Paw Percussion — I Love Meow">
+<meta property="og:description" content="Tap along to the beat in Paw Percussion, a cat-themed rhythm game on I Love Meow.">
+<meta property="og:url" content="https://ilovemeow.app/game-rhythm.html">
+<meta property="og:image" content="https://ilovemeow.app/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Paw Percussion — I Love Meow">
+<meta name="twitter:description" content="Tap along to the beat in Paw Percussion, a cat-themed rhythm game on I Love Meow.">
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Poppins:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css">
+<script>(function(){var t=localStorage.getItem("ilm_theme")||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",t);})();</script>
+</head>
+<body>
+<div class="bg-blobs" id="bg-blobs"></div>
+<div class="mobile-dock" id="mobile-dock"></div>
+<div class="nav-shell"><nav class="app-nav" id="app-nav"></nav></div>
+
+<div class="game-shell page">
+  <a href="/games.html" class="back-home">← Back to Meow Arcade</a>
+  <div class="game-topbar">
+    <div class="stat">🐾 <span id="hud-score">0</span></div>
+    <div class="stat">🔥 <span id="hud-combo">0</span>x</div>
+    <div class="stat">✨ <span id="hud-mult">1</span>×</div>
+  </div>
+
+  <div class="game-canvas-wrap" id="canvas-wrap">
+    <canvas id="game-canvas" width="450" height="650"></canvas>
+    <div class="lane-touch-zones" id="lane-zones"></div>
+    <div class="combo-flash" id="combo-flash"></div>
+
+    <div class="game-overlay" id="overlay-start">
+      <h2>🥁 Paw Percussion</h2>
+      <p style="opacity:.8; max-width:320px; font-size:13.5px;">Tap the lane when a paw reaches the line. Chain hits for combo multipliers.</p>
+      <p style="font-size:12.5px; opacity:.6;">Desktop: D F J K &nbsp;·&nbsp; Mobile: tap the lanes</p>
+      <div>
+        <div style="font-size:12px; opacity:.7; margin-bottom:6px;">Difficulty</div>
+        <div class="difficulty-row" id="difficulty-row">
+          <button class="difficulty-pick" data-d="easy">Easy</button>
+          <button class="difficulty-pick selected" data-d="medium">Medium</button>
+          <button class="difficulty-pick" data-d="hard">Hard</button>
+        </div>
+      </div>
+      <button class="btn btn-primary" id="start-btn" style="margin-top:10px;">Start</button>
+    </div>
+
+    <div class="game-overlay" id="overlay-pause" style="display:none;">
+      <h2>Paused</h2>
+      <button class="btn btn-primary" id="resume-btn">Resume</button>
+      <button class="btn btn-ghost" id="quit-btn" style="background:rgba(255,255,255,0.15); color:#fff;">Quit</button>
+    </div>
+
+    <div class="game-overlay" id="overlay-end" style="display:none;">
+      <h2 id="end-title">Nice run! 🐾</h2>
+      <div style="font-size:15px;">Score: <b id="end-score">0</b></div>
+      <div style="font-size:13px; opacity:.8;">Best combo: <span id="end-combo">0</span>x</div>
+      <div style="font-size:13px; opacity:.9;" id="end-rewards"></div>
+      <div id="end-achievements" style="display:flex; gap:8px; flex-wrap:wrap; justify-content:center; max-width:320px;"></div>
+      <div style="display:flex; gap:10px; margin-top:8px;">
+        <button class="btn btn-primary" id="play-again-btn">Play again</button>
+        <a href="/games.html" class="btn btn-ghost" style="background:rgba(255,255,255,0.15); color:#fff;">Arcade</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="game-controls-row">
+    <button class="game-icon-btn" id="pause-btn" title="Pause" aria-label="Pause game">⏸️</button>
+    <button class="game-icon-btn" id="mute-btn" title="Mute" aria-label="Mute sound">🔊</button>
+  </div>
+</div>
+
+<script src="/app.js"></script>
+<script>
+  if (!Meow.requireAuth()) { throw new Error('redirecting'); }
+  Meow.renderNav('games');
+
+  // ---- Config ----
+  const LANES = 4;
+  const LANE_KEYS = ['d', 'f', 'j', 'k'];
+  const DIFF = {
+    easy:   { spawnMs: 700, fallMs: 2100, duration: 40000 },
+    medium: { spawnMs: 520, fallMs: 1750, duration: 45000 },
+    hard:   { spawnMs: 380, fallMs: 1450, duration: 50000 },
+  };
+  const PERFECT_MS = 90, GOOD_MS = 170;
+  const LANE_COLORS = ['#FF8A00', '#FFC7D6', '#8F7CFF', '#64D27A'];
+
+  // ---- Canvas setup ----
+  const canvas = document.getElementById('game-canvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const laneWidth = W / LANES;
+  const hitLineY = H - 110;
+
+  // ---- Sound (synthesized — no external audio assets available) ----
+  let audioCtx = null;
+  let muted = false;
+  function beep(freq, durationMs, type = 'sine', vol = 0.15) {
+    if (muted) return;
+    try {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = type; osc.frequency.value = freq;
+      gain.gain.value = vol;
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.start();
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + durationMs / 1000);
+      osc.stop(audioCtx.currentTime + durationMs / 1000);
+    } catch (e) { /* audio not available — game still works silently */ }
+  }
+
+  // ---- State ----
+  let state = 'idle'; // idle | playing | paused | ended
+  let difficulty = 'medium';
+  let notes = [];      // {lane, spawnAt, hitAt, judged}
+  let nextSpawnAt = 0;
+  let score = 0, combo = 0, bestCombo = 0, multiplier = 1;
+  let sessionId = null;
+  let startedAt = 0, elapsedAtPause = 0, pausedAt = 0;
+  let rafId = null;
+  let gameEndAt = 0;
+
+  function laneCenterX(lane) { return lane * laneWidth + laneWidth / 2; }
+
+  function drawPawMascot(x, y, scale = 1) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(scale, scale);
+    ctx.fillStyle = '#FF8A00';
+    ctx.beginPath(); ctx.ellipse(0, 6, 15, 12, 0, 0, Math.PI * 2); ctx.fill();
+    // toe beans
+    ctx.fillStyle = '#FFD7B0';
+    [[-9, 0], [-3, -4], [3, -4], [9, 0]].forEach(([dx, dy]) => {
+      ctx.beginPath(); ctx.ellipse(dx, dy, 4, 5, 0, 0, Math.PI * 2); ctx.fill();
+    });
+    ctx.restore();
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    // lane backgrounds
+    for (let i = 0; i < LANES; i++) {
+      ctx.fillStyle = i % 2 === 0 ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.015)';
+      ctx.fillRect(i * laneWidth, 0, laneWidth, H);
+    }
+    // lane separators
+    ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+    for (let i = 1; i < LANES; i++) {
+      ctx.beginPath(); ctx.moveTo(i * laneWidth, 0); ctx.lineTo(i * laneWidth, H); ctx.stroke();
+    }
+    // hit line
+    ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+    ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(0, hitLineY); ctx.lineTo(W, hitLineY); ctx.stroke();
+    ctx.lineWidth = 1;
+
+    const now = performance.now();
+    for (const n of notes) {
+      if (n.judged) continue;
+      const t = (now - n.spawnAt) / (n.hitAt - n.spawnAt);
+      const y = t * hitLineY;
+      if (y > H + 30) continue;
+      ctx.fillStyle = LANE_COLORS[n.lane];
+      ctx.globalAlpha = 0.95;
+      drawPawMascot(laneCenterX(n.lane), y);
+      ctx.globalAlpha = 1;
+    }
+    // lane key labels
+    ctx.fillStyle = 'rgba(255,255,255,0.35)';
+    ctx.font = '700 14px Inter, sans-serif';
+    ctx.textAlign = 'center';
+    for (let i = 0; i < LANES; i++) {
+      ctx.fillText(LANE_KEYS[i].toUpperCase(), laneCenterX(i), hitLineY + 34);
+    }
+    drawBongoCat();
+  }
+
+  function spawnLoop(now) {
+    if (now >= nextSpawnAt) {
+      const lane = Math.floor(Math.random() * LANES);
+      const cfg = DIFF[difficulty];
+      notes.push({ lane, spawnAt: now, hitAt: now + cfg.fallMs, judged: false });
+      nextSpawnAt = now + cfg.spawnMs * (0.8 + Math.random() * 0.4);
+    }
+  }
+
+  function judgeMissed(now) {
+    for (const n of notes) {
+      if (!n.judged && now - n.hitAt > GOOD_MS) {
+        n.judged = true;
+        registerMiss();
+      }
+    }
+    notes = notes.filter(n => now - n.hitAt < 4000);
+  }
+
+  function flashCombo(text) {
+    const el = document.getElementById('combo-flash');
+    el.textContent = text;
+    el.classList.remove('show'); void el.offsetWidth; el.classList.add('show');
+  }
+
+  function registerHit(lane) {
+    const now = performance.now();
+    // Find the closest un-judged note in this lane within the good window.
+    let best = null, bestDiff = Infinity;
+    for (const n of notes) {
+      if (n.judged || n.lane !== lane) continue;
+      const diff = Math.abs(now - n.hitAt);
+      if (diff < bestDiff) { bestDiff = diff; best = n; }
+    }
+    if (!best || bestDiff > GOOD_MS) {
+      registerMiss(); // tapped with nothing to hit
+      return;
+    }
+    best.judged = true;
+    const perfect = bestDiff <= PERFECT_MS;
+    combo++;
+    bestCombo = Math.max(bestCombo, combo);
+    multiplier = Math.min(4, 1 + Math.floor(combo / 10));
+    const base = perfect ? 100 : 55;
+    const gained = base * multiplier;
+    score += gained;
+    beep(perfect ? 880 : 660, 90, 'triangle', 0.12);
+    if (perfect) flashCombo(combo >= 10 ? `${combo}x Perfect!` : 'Perfect!');
+    spawnFloatScore(laneCenterX(best.lane), hitLineY, `+${gained}`, perfect);
+    bongoHit(best.lane, perfect);
+    if (combo > 0 && combo % 25 === 0) shakeScreen();
+    updateHud();
+  }
+
+  function registerMiss() {
+    combo = 0;
+    multiplier = 1;
+    beep(180, 140, 'sawtooth', 0.1);
+    updateHud();
+  }
+
+  // ---- Juice: floating score popups, screen shake, bongo-cat mascot ----
+  function spawnFloatScore(x, y, text, perfect) {
+    const wrap = document.getElementById('canvas-wrap');
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = rect.width / W, scaleY = rect.height / H;
+    const el = document.createElement('div');
+    el.className = 'float-score';
+    el.textContent = text;
+    el.style.left = (x * scaleX) + 'px';
+    el.style.top = (y * scaleY) + 'px';
+    if (perfect) el.style.color = '#FFD24D';
+    wrap.appendChild(el);
+    setTimeout(() => el.remove(), 820);
+  }
+
+  function shakeScreen() {
+    const wrap = document.getElementById('canvas-wrap');
+    wrap.classList.remove('screen-shake'); void wrap.offsetWidth; wrap.classList.add('screen-shake');
+  }
+
+  // Bongo-cat mascot: sits under the lanes, ears perk and paws bounce
+  // whenever a note is judged — purely visual feedback layered on top of
+  // the existing note-lane gameplay.
+  let bongoAnim = { lane: -1, until: 0, perfect: false };
+  function bongoHit(lane, perfect) {
+    bongoAnim = { lane, until: performance.now() + 220, perfect };
+  }
+  function drawBongoCat() {
+    const now = performance.now();
+    const hitting = now < bongoAnim.until;
+    const cx = W / 2, cy = H - 40;
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.fillStyle = '#FF8A00';
+    ctx.beginPath(); ctx.ellipse(0, 0, 34, 22, 0, 0, Math.PI * 2); ctx.fill();
+    const earLift = hitting ? -3 : 0;
+    ctx.beginPath(); ctx.moveTo(-22, -14 + earLift); ctx.lineTo(-30, -30 + earLift); ctx.lineTo(-10, -20); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(22, -14 + earLift); ctx.lineTo(30, -30 + earLift); ctx.lineTo(10, -20); ctx.closePath(); ctx.fill();
+    const blinking = Math.floor(now / 2600) % 40 === 0;
+    ctx.fillStyle = '#1D1D1D';
+    const eyeH = blinking ? 0.6 : (hitting && bongoAnim.perfect ? 4.2 : 3.2);
+    ctx.beginPath(); ctx.ellipse(-10, -2, 2.6, eyeH, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(10, -2, 2.6, eyeH, 0, 0, Math.PI * 2); ctx.fill();
+    const pawDrop = hitting ? 8 : 0;
+    ['left', 'right'].forEach((side, i) => {
+      const dx = side === 'left' ? -30 : 30;
+      const active = hitting && (bongoAnim.lane % 2 === i);
+      ctx.fillStyle = '#FFC7D6';
+      ctx.beginPath();
+      ctx.ellipse(dx, 8 + (active ? pawDrop : 0), 9, 7, 0, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    ctx.restore();
+  }
+
+  function updateHud() {
+    document.getElementById('hud-score').textContent = score;
+    document.getElementById('hud-combo').textContent = combo;
+    document.getElementById('hud-mult').textContent = multiplier;
+  }
+
+  function loop(now) {
+    if (state !== 'playing') return;
+    spawnLoop(now);
+    judgeMissed(now);
+    draw();
+    if (now >= gameEndAt) { endGame(); return; }
+    rafId = requestAnimationFrame(loop);
+  }
+
+  async function startGame() {
+    const cfg = DIFF[difficulty];
+    try {
+      const { session_id } = await Meow.api('/api/games/session', { method: 'POST', body: { game: 'rhythm', difficulty } });
+      sessionId = session_id;
+    } catch (err) { Meow.toast(err.message); return; }
+    notes = []; score = 0; combo = 0; bestCombo = 0; multiplier = 1;
+    nextSpawnAt = performance.now() + 400;
+    startedAt = performance.now();
+    gameEndAt = startedAt + cfg.duration;
+    state = 'playing';
+    document.getElementById('overlay-start').style.display = 'none';
+    document.getElementById('overlay-end').style.display = 'none';
+    updateHud();
+    rafId = requestAnimationFrame(loop);
+  }
+
+  function pauseGame() {
+    if (state !== 'playing') return;
+    state = 'paused';
+    pausedAt = performance.now();
+    cancelAnimationFrame(rafId);
+    document.getElementById('overlay-pause').style.display = 'flex';
+  }
+
+  function resumeGame() {
+    if (state !== 'paused') return;
+    const pauseDuration = performance.now() - pausedAt;
+    gameEndAt += pauseDuration;
+    for (const n of notes) { n.spawnAt += pauseDuration; n.hitAt += pauseDuration; }
+    nextSpawnAt += pauseDuration;
+    state = 'playing';
+    document.getElementById('overlay-pause').style.display = 'none';
+    rafId = requestAnimationFrame(loop);
+  }
+
+  async function endGame() {
+    state = 'ended';
+    cancelAnimationFrame(rafId);
+    const durationMs = Math.round(performance.now() - startedAt);
+    document.getElementById('end-score').textContent = score;
+    document.getElementById('end-combo').textContent = bestCombo;
+    document.getElementById('overlay-end').style.display = 'flex';
+    document.getElementById('end-rewards').textContent = 'Submitting score…';
+    document.getElementById('end-achievements').innerHTML = '';
+    try {
+      const result = await Meow.api('/api/games/scores', {
+        method: 'POST',
+        body: { session_id: sessionId, score, max_combo: bestCombo, duration_ms: durationMs },
+      });
+      document.getElementById('end-rewards').textContent = `+${result.xp_earned} XP · +${result.coins_earned} 🐟 Fish Coins${result.challengeCompleted ? ' · Daily Challenge complete!' : ''}`;
+      if (result.newAchievements && result.newAchievements.length) {
+        document.getElementById('end-achievements').innerHTML = result.newAchievements.map(a =>
+          `<span class="badge">${a.icon} ${Meow.escapeHtml(a.name)}</span>`
+        ).join('');
+      }
+      Meow.user = result.user;
+    } catch (err) {
+      document.getElementById('end-rewards').textContent = "Couldn't save this score — it may have expired.";
+    }
+  }
+
+  function quitToStart() {
+    cancelAnimationFrame(rafId);
+    state = 'idle';
+    document.getElementById('overlay-pause').style.display = 'none';
+    document.getElementById('overlay-start').style.display = 'flex';
+    ctx.clearRect(0, 0, W, H);
+  }
+
+  // ---- Input ----
+  document.addEventListener('keydown', (e) => {
+    if (state !== 'playing') return;
+    const idx = LANE_KEYS.indexOf(e.key.toLowerCase());
+    if (idx !== -1) registerHit(idx);
+  });
+
+  const laneZones = document.getElementById('lane-zones');
+  for (let i = 0; i < LANES; i++) {
+    const z = document.createElement('div');
+    z.addEventListener('pointerdown', () => { if (state === 'playing') registerHit(i); });
+    laneZones.appendChild(z);
+  }
+
+  document.querySelectorAll('.difficulty-pick').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.difficulty-pick').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      difficulty = btn.dataset.d;
+    });
+  });
+
+  document.getElementById('start-btn').addEventListener('click', startGame);
+  document.getElementById('play-again-btn').addEventListener('click', startGame);
+  document.getElementById('pause-btn').addEventListener('click', pauseGame);
+  document.getElementById('resume-btn').addEventListener('click', resumeGame);
+  document.getElementById('quit-btn').addEventListener('click', quitToStart);
+  document.getElementById('mute-btn').addEventListener('click', (e) => {
+    muted = !muted;
+    e.target.textContent = muted ? '🔇' : '🔊';
+  });
+
+  draw();
+</script>
+</body>
+</html>

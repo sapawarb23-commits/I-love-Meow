@@ -1,0 +1,12 @@
+apiVersion: 1
+
+providers:
+  - name: ilovemeow
+    orgId: 1
+    folder: "I Love Meow"
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /etc/grafana/provisioning/dashboards

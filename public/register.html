@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Join the Clowder — I Love Meow</title>
+<meta name="description" content="Create your I Love Meow account and join a cozy community built for cat lovers.">
+<link rel="canonical" href="https://ilovemeow.app/register.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Join the Clowder — I Love Meow">
+<meta property="og:description" content="Create your I Love Meow account and join a cozy community built for cat lovers.">
+<meta property="og:url" content="https://ilovemeow.app/register.html">
+<meta property="og:image" content="https://ilovemeow.app/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Join the Clowder — I Love Meow">
+<meta name="twitter:description" content="Create your I Love Meow account and join a cozy community built for cat lovers.">
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Poppins:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css">
+<script>(function(){var t=localStorage.getItem("ilm_theme")||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",t);})();</script>
+</head>
+<body>
+<div class="bg-blobs" id="bg-blobs"></div>
+<div class="mobile-dock" id="mobile-dock"></div>
+
+<div class="wizard-shell">
+  <div style="width:100%; max-width:480px;">
+    <a href="/" class="back-home">← Back to I Love Meow</a>
+    <div class="wizard-card">
+      <div class="wizard-progress" id="wizard-progress"></div>
+
+      <!-- Step 1: Welcome -->
+      <div class="wizard-step" data-step="1">
+        <div class="wizard-emoji-hero">🐱</div>
+        <h1 class="cute" style="font-size:24px; text-align:center; margin-bottom:8px;">Welcome to the Clowder</h1>
+        <p style="text-align:center; opacity:.65; font-size:14px; line-height:1.6; margin-bottom:26px;">
+          A few quick steps and your account — and your cat's first profile — will be ready.
+        </p>
+        <button class="btn btn-primary btn-block" data-next>Let's go</button>
+      </div>
+
+      <!-- Step 2: Account details -->
+      <div class="wizard-step" data-step="2" style="display:none;">
+        <h2 class="cute" style="font-size:21px; margin-bottom:4px;">Create your account</h2>
+        <p style="opacity:.6; font-size:13.5px; margin-bottom:20px;">This is how you'll log back in.</p>
+        <div id="account-error"></div>
+        <div class="field-float">
+          <input type="text" id="username" placeholder=" " required minlength="3" maxlength="20" pattern="[a-zA-Z0-9_]+" autocomplete="username">
+          <label>Username</label>
+        </div>
+        <div class="field-float">
+          <input type="email" id="email" placeholder=" " required autocomplete="email">
+          <label>Email</label>
+        </div>
+        <div class="field-float">
+          <input type="password" id="password" placeholder=" " required minlength="8" autocomplete="new-password">
+          <label>Password (min. 8 characters)</label>
+          <button type="button" class="toggle-pass" id="toggle-pass">👁️</button>
+        </div>
+        <div class="wizard-nav">
+          <button class="btn btn-ghost" data-back>Back</button>
+          <button class="btn btn-primary" id="account-next">Continue</button>
+        </div>
+      </div>
+
+      <!-- Step 3: Choose avatar -->
+      <div class="wizard-step" data-step="3" style="display:none;">
+        <h2 class="cute" style="font-size:21px; margin-bottom:4px;">Pick your avatar</h2>
+        <p style="opacity:.6; font-size:13.5px; margin-bottom:6px;">You can change it later from your profile.</p>
+        <div class="emoji-grid" id="avatar-grid"></div>
+        <div class="wizard-nav">
+          <button class="btn btn-ghost" data-back>Back</button>
+          <button class="btn btn-primary" data-next>Continue</button>
+        </div>
+      </div>
+
+      <!-- Step 4: Add first cat -->
+      <div class="wizard-step" data-step="4" style="display:none;">
+        <h2 class="cute" style="font-size:21px; margin-bottom:4px;">Add your first cat</h2>
+        <p style="opacity:.6; font-size:13.5px; margin-bottom:16px;">Optional — you can always add cats later from your profile.</p>
+        <div class="field-float">
+          <input type="text" id="cat-name" placeholder=" " maxlength="30">
+          <label>Cat's name</label>
+        </div>
+        <p style="font-size:12.5px; font-weight:700; opacity:.6; margin:14px 0 8px;">Favorite breed</p>
+        <div class="breed-grid" id="breed-grid"></div>
+        <div class="wizard-nav">
+          <button class="btn btn-ghost" data-back>Back</button>
+          <button class="btn btn-primary" id="finish-btn">Finish</button>
+        </div>
+      </div>
+
+      <!-- Step 5: Done -->
+      <div class="wizard-step" data-step="5" style="display:none;">
+        <div class="wizard-emoji-hero" id="purr-hero">😻</div>
+        <h1 class="cute" style="font-size:24px; text-align:center; margin-bottom:8px;">You're in!</h1>
+        <p id="finish-message" style="text-align:center; opacity:.65; font-size:14px; line-height:1.6; margin-bottom:26px;">
+          Your account is ready. Time for your first Meow.
+        </p>
+        <button class="btn btn-primary btn-block" id="enter-feed">Enter the feed</button>
+      </div>
+
+      <div class="step-dots" id="step-dots"></div>
+    </div>
+    <p class="muted-link">Already a member? <a href="/login.html">Log in</a></p>
+  </div>
+</div>
+
+<script src="/app.js"></script>
+<script>
+  Meow.renderNav('register');
+  if (Meow.token) window.location.href = '/feed.html';
+
+  const TOTAL_STEPS = 5;
+  let step = 1;
+  const state = { avatar_emoji: '🐱', breed: '' };
+
+  const progressEl = document.getElementById('wizard-progress');
+  for (let i = 1; i <= TOTAL_STEPS; i++) {
+    const seg = document.createElement('div');
+    seg.className = 'seg';
+    seg.innerHTML = '<i></i>';
+    progressEl.appendChild(seg);
+  }
+  const dotsEl = document.getElementById('step-dots');
+  for (let i = 1; i <= TOTAL_STEPS; i++) {
+    const d = document.createElement('span');
+    dotsEl.appendChild(d);
+  }
+
+  function renderStep() {
+    document.querySelectorAll('.wizard-step').forEach(el => {
+      el.style.display = Number(el.dataset.step) === step ? 'block' : 'none';
+    });
+    document.querySelectorAll('.wizard-progress .seg').forEach((seg, i) => {
+      seg.classList.toggle('done', i + 1 < step);
+      seg.classList.toggle('current', i + 1 === step);
+    });
+    document.querySelectorAll('.step-dots span').forEach((d, i) => {
+      d.classList.toggle('active', i + 1 === step);
+    });
+  }
+  renderStep();
+
+  document.querySelectorAll('[data-next]').forEach(btn => btn.addEventListener('click', () => { step++; renderStep(); }));
+  document.querySelectorAll('[data-back]').forEach(btn => btn.addEventListener('click', () => { step--; renderStep(); }));
+
+  document.getElementById('toggle-pass').addEventListener('click', () => {
+    const input = document.getElementById('password');
+    input.type = input.type === 'password' ? 'text' : 'password';
+  });
+
+  // Step 3: avatar grid
+  const avatars = ['🐱','🐈','🐈‍⬛','😺','😻','😼','🙀','😹','🦁','🐯'];
+  const avatarGrid = document.getElementById('avatar-grid');
+  avatars.forEach((emoji, i) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'emoji-pick' + (i === 0 ? ' selected' : '');
+    btn.textContent = emoji;
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.emoji-pick').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      state.avatar_emoji = emoji;
+    });
+    avatarGrid.appendChild(btn);
+  });
+
+  // Step 4: breed grid
+  const breeds = ['Tabby','Siamese','Persian','Maine Coon','Ragdoll','Sphynx','Bengal','Mixed / Not sure'];
+  const breedGrid = document.getElementById('breed-grid');
+  breeds.forEach(breed => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'breed-pick';
+    btn.textContent = breed;
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.breed-pick').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      state.breed = breed === 'Mixed / Not sure' ? '' : breed;
+    });
+    breedGrid.appendChild(btn);
+  });
+
+  // Step 2 -> creates the real account via the API before moving on.
+  document.getElementById('account-next').addEventListener('click', async () => {
+    const errBox = document.getElementById('account-error');
+    errBox.innerHTML = '';
+    const username = document.getElementById('username').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    if (!username || !email || !password) {
+      errBox.innerHTML = `<div class="error-msg">All fields are required.</div>`;
+      return;
+    }
+    const btn = document.getElementById('account-next');
+    btn.disabled = true; btn.textContent = 'Creating…';
+    try {
+      const { token, user } = await Meow.api('/api/auth/register', {
+        method: 'POST',
+        body: { username, email, password },
+      });
+      Meow.setSession(token, user);
+      step++; renderStep();
+    } catch (err) {
+      errBox.innerHTML = `<div class="error-msg">${Meow.escapeHtml(err.message)}</div>`;
+    } finally {
+      btn.disabled = false; btn.textContent = 'Continue';
+    }
+  });
+
+  // Step 4 -> optionally creates the first cat, then shows the real finish state.
+  document.getElementById('finish-btn').addEventListener('click', async () => {
+    const btn = document.getElementById('finish-btn');
+    btn.disabled = true; btn.textContent = 'Finishing…';
+    const catName = document.getElementById('cat-name').value.trim();
+    try {
+      // Save the chosen avatar to the account isn't a supported endpoint yet, so we keep it
+      // attached to the first cat profile, which the API does support.
+      if (catName) {
+        await Meow.api('/api/cats', {
+          method: 'POST',
+          body: { name: catName, breed: state.breed, avatar_emoji: state.avatar_emoji },
+        });
+        document.getElementById('finish-message').textContent = `${catName}'s profile is live. Time for your first Meow.`;
+      } else {
+        document.getElementById('finish-message').textContent = `Your account is ready — add a cat anytime from your profile.`;
+      }
+      step++; renderStep();
+      Meow.confettiBurst();
+    } catch (err) {
+      Meow.toast(err.message);
+    } finally {
+      btn.disabled = false; btn.textContent = 'Finish';
+    }
+  });
+
+  document.getElementById('enter-feed').addEventListener('click', () => {
+    window.location.href = '/feed.html';
+  });
+</script>
+</body>
+</html>

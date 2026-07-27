@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Explore — I Love Meow</title>
+<meta name="description" content="Discover trending Meows, search the clowder, and find your next favorite cat account on I Love Meow.">
+<link rel="canonical" href="https://ilovemeow.app/explore.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Explore — I Love Meow">
+<meta property="og:description" content="Discover trending Meows, search the clowder, and find your next favorite cat account on I Love Meow.">
+<meta property="og:url" content="https://ilovemeow.app/explore.html">
+<meta property="og:image" content="https://ilovemeow.app/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Explore — I Love Meow">
+<meta name="twitter:description" content="Discover trending Meows, search the clowder, and find your next favorite cat account on I Love Meow.">
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Poppins:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css">
+<script>(function(){var t=localStorage.getItem("ilm_theme")||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",t);})();</script>
+</head>
+<body>
+<div class="bg-blobs" id="bg-blobs"></div>
+<div class="mobile-dock" id="mobile-dock"></div>
+<div class="nav-shell"><nav class="app-nav" id="app-nav"></nav></div>
+
+<div class="wrap page" style="padding-top:8px; max-width:1180px;">
+
+  <h1 class="cute" style="text-align:center; font-size:28px; margin-bottom:16px;">Explore the Clowder 🐾</h1>
+
+  <div class="search-box-wrap">
+    <input type="text" class="search-input" id="search-input" placeholder="Search cats, people, or Meows..." autocomplete="off">
+    <span class="search-icon">🔍</span>
+    <div class="search-dropdown" id="search-dropdown" style="display:none;"></div>
+  </div>
+
+  <div id="recent-trending-row" style="max-width:560px; margin:0 auto 26px;"></div>
+
+  <div class="filter-bar" id="filter-bar">
+    <select class="filter-select" id="breed-filter"><option value="">All breeds</option></select>
+    <select class="filter-select" id="color-filter"><option value="">All colors</option></select>
+    <select class="filter-select" id="age-filter">
+      <option value="">All ages</option>
+      <option value="kitten">Kitten (&lt;1yr)</option>
+      <option value="adult">Adult (1–7yr)</option>
+      <option value="senior">Senior (7yr+)</option>
+    </select>
+    <div class="sort-tabs" id="sort-tabs">
+      <button data-sort="newest" class="active">Newest</button>
+      <button data-sort="trending">Trending</button>
+      <button data-sort="discussed">Most discussed</button>
+    </div>
+    <button class="clear-filters" id="clear-filters" style="display:none;">Clear filters ✕</button>
+  </div>
+
+  <div id="explore-skeleton" class="masonry">
+    <div class="masonry-item card skeleton-card" style="height:220px;"></div>
+    <div class="masonry-item card skeleton-card" style="height:280px;"></div>
+    <div class="masonry-item card skeleton-card" style="height:190px;"></div>
+    <div class="masonry-item card skeleton-card" style="height:250px;"></div>
+  </div>
+  <div class="masonry" id="explore-grid"></div>
+  <div id="explore-empty"></div>
+  <button id="load-more-explore" class="btn btn-ghost btn-block" style="display:none; margin-top:10px;">Load more</button>
+</div>
+
+<script src="/app.js"></script>
+<script>
+  if (!Meow.requireAuth()) { throw new Error('redirecting'); }
+  Meow.renderNav('explore');
+
+  let filters = { breed: '', color: '', age: '', sort: 'newest' };
+  let offset = 0;
+  const PAGE_SIZE = 24;
+
+  // ---- Filter dropdowns, populated from real data ----
+  async function loadFilterOptions() {
+    const { breeds, colors } = await Meow.api('/api/explore/filters');
+    const breedSel = document.getElementById('breed-filter');
+    breeds.forEach(b => {
+      const opt = document.createElement('option');
+      opt.value = b; opt.textContent = b;
+      breedSel.appendChild(opt);
+    });
+    const colorSel = document.getElementById('color-filter');
+    colors.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c; opt.textContent = c;
+      colorSel.appendChild(opt);
+    });
+
+    // Deep link support: /explore.html?breed=Siamese from the Breed Explorer.
+    const urlBreed = new URLSearchParams(window.location.search).get('breed');
+    if (urlBreed && breeds.includes(urlBreed)) {
+      breedSel.value = urlBreed;
+      filters.breed = urlBreed;
+      syncClearBtn();
+    }
+  }
+
+  function explorCardHtml(m) {
+    const catLine = m.cat_name ? `${Meow.escapeHtml(m.cat_name)}${m.cat_breed ? ' · ' + Meow.escapeHtml(m.cat_breed) : ''}` : '';
+    return `
+      <div class="masonry-item">
+        <div class="card lift explore-card" data-id="${m.id}">
+          ${m.image_url
+            ? `<img src="${Meow.escapeHtml(m.image_url)}" alt="" loading="lazy" onerror="this.closest('.explore-card').classList.add('no-image-card'); this.remove();">`
+            : ''}
+          <div class="explore-body ${!m.image_url ? 'no-image-card' : ''}">
+            ${m.caption ? `<div class="explore-caption">${Meow.escapeHtml(m.caption)}</div>` : ''}
+            <div class="explore-meta">
+              <span class="avatar-emoji" style="width:22px;height:22px;font-size:11px;">${m.author_avatar || '🐱'}</span>
+              <span>@${Meow.escapeHtml(m.author_username)}</span>
+              ${catLine ? `<span>· ${catLine}</span>` : ''}
+            </div>
+            <div class="explore-stats">
+              <span>${(() => { const top = Object.entries(m.reactions.counts||{}).sort((a,b)=>b[1]-a[1])[0]; return top ? Meow.REACTIONS[top[0]] : '🐾'; })()} ${m.reactions.total}</span>
+              <span>💬 ${m.meowmentCount}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderEmpty() {
+    document.getElementById('explore-empty').innerHTML = `
+      <div class="card empty-state">
+        <div class="emoji">🔭🐈</div>
+        <h3 class="cute">Nothing here yet</h3>
+        <p>No Meows match these filters. Try widening your search, or check back once more cats join the clowder.</p>
+      </div>
+    `;
+  }
+
+  async function loadExplore(reset = true) {
+    if (reset) { offset = 0; document.getElementById('explore-grid').innerHTML = ''; document.getElementById('explore-empty').innerHTML = ''; }
+    document.getElementById('explore-skeleton').style.display = reset ? 'block' : 'none';
+    const params = new URLSearchParams({ ...filters, offset, limit: PAGE_SIZE });
+    for (const [k, v] of [...params]) if (!v) params.delete(k);
+    try {
+      const { results, hasMore } = await Meow.api(`/api/explore?${params.toString()}`);
+      document.getElementById('explore-skeleton').style.display = 'none';
+      const grid = document.getElementById('explore-grid');
+      if (reset && results.length === 0) { renderEmpty(); }
+      results.forEach(m => grid.insertAdjacentHTML('beforeend', explorCardHtml(m)));
+      offset += results.length;
+      document.getElementById('load-more-explore').style.display = hasMore ? 'block' : 'none';
+    } catch (err) {
+      document.getElementById('explore-skeleton').style.display = 'none';
+      Meow.toast(err.message);
+      if (reset) document.getElementById('explore-empty').innerHTML = Meow.offlineCardHtml('Reload');
+    }
+  }
+
+  document.getElementById('breed-filter').addEventListener('change', e => { filters.breed = e.target.value; syncClearBtn(); loadExplore(); });
+  document.getElementById('color-filter').addEventListener('change', e => { filters.color = e.target.value; syncClearBtn(); loadExplore(); });
+  document.getElementById('age-filter').addEventListener('change', e => { filters.age = e.target.value; syncClearBtn(); loadExplore(); });
+  document.querySelectorAll('#sort-tabs button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#sort-tabs button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      filters.sort = btn.dataset.sort;
+      loadExplore();
+    });
+  });
+  document.getElementById('clear-filters').addEventListener('click', () => {
+    filters = { breed: '', color: '', age: '', sort: filters.sort };
+    document.getElementById('breed-filter').value = '';
+    document.getElementById('color-filter').value = '';
+    document.getElementById('age-filter').value = '';
+    syncClearBtn();
+    loadExplore();
+  });
+  function syncClearBtn() {
+    const active = filters.breed || filters.color || filters.age;
+    document.getElementById('clear-filters').style.display = active ? 'inline-block' : 'none';
+  }
+  document.getElementById('load-more-explore').addEventListener('click', () => loadExplore(false));
+
+  // ---- Global search ----
+  const searchInput = document.getElementById('search-input');
+  const dropdown = document.getElementById('search-dropdown');
+  let searchTimer = null;
+
+  function recentSearches() {
+    return JSON.parse(localStorage.getItem('ilm_recent_searches') || '[]');
+  }
+  function pushRecentSearch(q) {
+    let arr = recentSearches().filter(x => x !== q);
+    arr.unshift(q);
+    arr = arr.slice(0, 6);
+    localStorage.setItem('ilm_recent_searches', JSON.stringify(arr));
+    renderRecentTrending();
+  }
+
+  async function renderRecentTrending() {
+    const recent = recentSearches();
+    let trending = [];
+    try { ({ trending } = await Meow.api('/api/search/trending')); } catch (e) { /* non-critical */ }
+    const row = document.getElementById('recent-trending-row');
+    if (!recent.length && !trending.length) { row.innerHTML = ''; return; }
+    row.innerHTML = `
+      ${recent.length ? `<div class="search-section-label">Recent</div><div class="chip-row" style="margin-bottom:10px;">${recent.map(r => `<button class="chip recent-chip">${Meow.escapeHtml(r)}</button>`).join('')}</div>` : ''}
+      ${trending.length ? `<div class="search-section-label">Trending searches</div><div class="chip-row">${trending.map(t => `<button class="chip trending-chip">🔥 ${Meow.escapeHtml(t)}</button>`).join('')}</div>` : ''}
+    `;
+    row.querySelectorAll('.recent-chip, .trending-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        searchInput.value = chip.textContent.replace('🔥 ', '').trim();
+        runSearch(searchInput.value);
+        searchInput.focus();
+      });
+    });
+  }
+
+  function searchResultRow({ icon, avatarHtml, title, sub }) {
+    const iconHtml = avatarHtml || `<span style="font-size:18px;">${icon}</span>`;
+    return `<div class="search-result-row">${iconHtml}<div><div class="title">${title}</div>${sub ? `<div class="sub">${sub}</div>` : ''}</div></div>`;
+  }
+
+  async function runSearch(q) {
+    if (!q || q.trim().length < 2) { dropdown.style.display = 'none'; return; }
+    try {
+      const { users, cats, meows } = await Meow.api(`/api/search?q=${encodeURIComponent(q.trim())}`);
+      if (!users.length && !cats.length && !meows.length) {
+        dropdown.innerHTML = `<p style="font-size:13px; opacity:.6; padding:6px;">No results for "${Meow.escapeHtml(q)}"</p>`;
+      } else {
+        dropdown.innerHTML = `
+          ${users.length ? `<div class="search-section-label">People</div>${users.map(u => searchResultRow({ avatarHtml: Meow.avatarHtml(u, { size: 30 }), title: '@' + Meow.escapeHtml(u.username), sub: `${u.meowment_points} Meowment Points` })).join('')}` : ''}
+          ${cats.length ? `<div class="search-section-label">Cats</div>${cats.map(c => searchResultRow({ icon: c.avatar_emoji || '🐾', title: Meow.escapeHtml(c.name), sub: `${c.breed ? Meow.escapeHtml(c.breed) + ' · ' : ''}owned by @${Meow.escapeHtml(c.owner_username)}` })).join('')}` : ''}
+          ${meows.length ? `<div class="search-section-label">Meows</div>${meows.map(m => searchResultRow({ icon: '📝', title: Meow.escapeHtml((m.caption || '').slice(0, 60)) || '(image only)', sub: `by @${Meow.escapeHtml(m.author_username)} · ${Meow.timeAgo(m.created_at)}` })).join('')}` : ''}
+        `;
+      }
+      dropdown.style.display = 'block';
+    } catch (err) { /* silent — search is non-critical */ }
+  }
+
+  searchInput.addEventListener('input', () => {
+    clearTimeout(searchTimer);
+    const q = searchInput.value;
+    searchTimer = setTimeout(() => runSearch(q), 350);
+  });
+  searchInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && searchInput.value.trim().length >= 2) {
+      pushRecentSearch(searchInput.value.trim());
+    }
+  });
+  searchInput.addEventListener('blur', () => {
+    if (searchInput.value.trim().length >= 2) pushRecentSearch(searchInput.value.trim());
+  });
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.search-box-wrap')) dropdown.style.display = 'none';
+  });
+
+  (async () => {
+    await loadFilterOptions();
+    renderRecentTrending();
+    loadExplore();
+  })();
+</script>
+</body>
+</html>

@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Log in — I Love Meow</title>
+<meta name="description" content="Log in to I Love Meow to catch up on your feed and reconnect with your clowder.">
+<link rel="canonical" href="https://ilovemeow.app/login.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Log in — I Love Meow">
+<meta property="og:description" content="Log in to I Love Meow to catch up on your feed and reconnect with your clowder.">
+<meta property="og:url" content="https://ilovemeow.app/login.html">
+<meta property="og:image" content="https://ilovemeow.app/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Log in — I Love Meow">
+<meta name="twitter:description" content="Log in to I Love Meow to catch up on your feed and reconnect with your clowder.">
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Poppins:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css">
+<script>(function(){var t=localStorage.getItem("ilm_theme")||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",t);})();</script>
+</head>
+<body>
+<div class="bg-blobs" id="bg-blobs"></div>
+<div class="mobile-dock" id="mobile-dock"></div>
+
+<div class="auth-split">
+  <div class="auth-split-art">
+    <div id="paw-field"></div>
+    <div class="art-inner">
+      <svg class="auth-cat" viewBox="0 0 200 200">
+        <ellipse cx="100" cy="130" rx="62" ry="50" fill="#FF914D"/>
+        <path d="M46 96 L30 40 L78 76 Z" fill="#FF914D"/>
+        <path d="M154 96 L170 40 L122 76 Z" fill="#FF914D"/>
+        <path d="M60 90 L44 52 L76 70 Z" fill="#FFC7D6"/>
+        <path d="M140 90 L156 52 L124 70 Z" fill="#FFC7D6"/>
+        <circle cx="76" cy="118" r="6" fill="#1D1D1D"/>
+        <circle cx="124" cy="118" r="6" fill="#1D1D1D"/>
+        <path d="M92 134 Q100 142 108 134" stroke="#1D1D1D" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <path d="M100 128 L100 134" stroke="#1D1D1D" stroke-width="2.5" stroke-linecap="round"/>
+        <path d="M40 128 h-24 M42 136 h-22 M40 120 h-20" stroke="#1D1D1D" stroke-width="1.5" opacity=".4" stroke-linecap="round"/>
+        <path d="M160 128 h24 M158 136 h22 M160 120 h20" stroke="#1D1D1D" stroke-width="1.5" opacity=".4" stroke-linecap="round"/>
+      </svg>
+      <h2 class="cute">Welcome back 🐾</h2>
+      <p>Log in to see what your clowder's been up to since you left.</p>
+      <div class="cat-fact" id="cat-fact">Loading a cat fact…</div>
+    </div>
+  </div>
+
+  <div class="auth-split-form">
+    <div style="width:100%; max-width:420px;">
+      <a href="/" class="back-home">← Back to I Love Meow</a>
+      <div class="auth-card-lg">
+        <h1 class="cute" style="font-size:26px; margin-bottom:6px;">Log in</h1>
+        <p style="opacity:.6; font-size:14px; margin-bottom:24px;">Good to see you again.</p>
+
+        <div class="social-row">
+          <button type="button" class="btn-social" title="Google sign-in needs OAuth credentials we haven't wired up yet">
+            <span>🔴</span> Continue with Google <span class="tag">Coming soon</span>
+          </button>
+          <button type="button" class="btn-social" title="Apple sign-in needs OAuth credentials we haven't wired up yet">
+            <span>⚫</span> Continue with Apple <span class="tag">Coming soon</span>
+          </button>
+          <button type="button" class="btn-social" title="GitHub sign-in needs OAuth credentials we haven't wired up yet">
+            <span>🐙</span> Continue with GitHub <span class="tag">Coming soon</span>
+          </button>
+        </div>
+        <div class="divider-text">or log in with your account</div>
+
+        <div id="error-box"></div>
+        <form id="login-form">
+          <div class="field-float">
+            <input type="text" id="usernameOrEmail" placeholder=" " required autocomplete="username">
+            <label>Username or email</label>
+          </div>
+          <div class="field-float">
+            <input type="password" id="password" placeholder=" " required autocomplete="current-password">
+            <label>Password</label>
+            <button type="button" class="toggle-pass" id="toggle-pass">👁️</button>
+          </div>
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; font-size:13px;">
+            <label style="display:flex; align-items:center; gap:6px; opacity:.75; cursor:pointer;">
+              <input type="checkbox" id="remember-me" style="width:auto;"> Remember me
+            </label>
+            <a href="#" id="forgot-link" style="font-weight:700; color:var(--primary-dark);">Forgot password?</a>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block" id="submit-btn">Log in</button>
+        </form>
+        <p class="muted-link">New here? <a href="/register.html">Join the Clowder</a></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/app.js"></script>
+<script>
+  Meow.renderNav('login');
+  if (Meow.token) window.location.href = '/feed.html';
+
+  // Drifting paw prints in the art panel — decorative but lightweight.
+  const pawField = document.getElementById('paw-field');
+  for (let i = 0; i < 6; i++) {
+    const p = document.createElement('div');
+    p.className = 'floating-paw';
+    p.textContent = '🐾';
+    p.style.left = (5 + Math.random() * 90) + '%';
+    p.style.fontSize = (14 + Math.random() * 14) + 'px';
+    p.style.animationDuration = (10 + Math.random() * 8) + 's';
+    p.style.animationDelay = (Math.random() * 10) + 's';
+    pawField.appendChild(p);
+  }
+
+  // Real cat facts, rotated client-side — not claims about this product.
+  const catFacts = [
+    "A group of cats is called a clowder.",
+    "Cats spend about 70% of their lives asleep.",
+    "A cat's purr vibrates at a frequency linked to bone healing.",
+    "Cats can rotate their ears 180 degrees.",
+    "A cat's nose print is as unique as a human fingerprint.",
+    "Cats have a third eyelid called a haw.",
+    "The oldest known pet cat was found in a 9,500-year-old grave.",
+  ];
+  let factIndex = 0;
+  const factEl = document.getElementById('cat-fact');
+  function showFact() {
+    factEl.style.opacity = 0;
+    setTimeout(() => {
+      factEl.textContent = '🐱 ' + catFacts[factIndex % catFacts.length];
+      factEl.style.opacity = 1;
+      factIndex++;
+    }, 350);
+  }
+  showFact();
+  setInterval(showFact, 5000);
+
+  // Password visibility toggle
+  document.getElementById('toggle-pass').addEventListener('click', () => {
+    const input = document.getElementById('password');
+    input.type = input.type === 'password' ? 'text' : 'password';
+  });
+
+  document.getElementById('forgot-link').addEventListener('click', (e) => {
+    e.preventDefault();
+    Meow.toast("Password reset needs an email provider we haven't connected yet — for now, reach out to support directly.");
+  });
+
+  document.querySelectorAll('.btn-social').forEach(btn => {
+    btn.addEventListener('click', () => {
+      Meow.toast("This sign-in method isn't connected yet — log in with your account below.");
+    });
+  });
+
+  document.getElementById('login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('submit-btn');
+    const errorBox = document.getElementById('error-box');
+    errorBox.innerHTML = '';
+    btn.disabled = true; btn.textContent = 'Logging in…';
+    try {
+      const { token, user } = await Meow.api('/api/auth/login', {
+        method: 'POST',
+        body: {
+          usernameOrEmail: document.getElementById('usernameOrEmail').value.trim(),
+          password: document.getElementById('password').value,
+        },
+      });
+      // Remember Me controls persistence: unchecked = session-only, so it really doesn't survive closing the browser.
+      const remember = document.getElementById('remember-me').checked;
+      if (remember) {
+        Meow.setSession(token, user);
+      } else {
+        sessionStorage.setItem('ilm_token', token);
+        sessionStorage.setItem('ilm_user', JSON.stringify(user));
+        Meow.token = token; Meow.user = user;
+      }
+      btn.textContent = 'Purrfect! 😻';
+      setTimeout(() => { window.location.href = '/feed.html'; }, 400);
+    } catch (err) {
+      errorBox.innerHTML = `<div class="error-msg">${Meow.escapeHtml(err.message)}</div>`;
+      btn.disabled = false; btn.textContent = 'Log in';
+    }
+  });
+
+</script>
+</body>
+</html>

@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Breed Explorer — I Love Meow</title>
+<meta name="description" content="Browse and compare cat breeds — temperament, grooming, history, and looks — in the I Love Meow Breed Explorer.">
+<link rel="canonical" href="https://ilovemeow.app/breeds.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Breed Explorer — I Love Meow">
+<meta property="og:description" content="Browse and compare cat breeds — temperament, grooming, history, and looks — in the I Love Meow Breed Explorer.">
+<meta property="og:url" content="https://ilovemeow.app/breeds.html">
+<meta property="og:image" content="https://ilovemeow.app/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Breed Explorer — I Love Meow">
+<meta name="twitter:description" content="Browse and compare cat breeds — temperament, grooming, history, and looks — in the I Love Meow Breed Explorer.">
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Poppins:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css">
+<script>(function(){var t=localStorage.getItem("ilm_theme")||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",t);})();</script>
+</head>
+<body>
+<div class="bg-blobs" id="bg-blobs"></div>
+<div class="mobile-dock" id="mobile-dock"></div>
+<div class="nav-shell"><nav class="app-nav" id="app-nav"></nav></div>
+
+<div class="wrap page" style="padding-top:8px; max-width:1080px;">
+  <h1 class="cute" style="text-align:center; font-size:28px; margin-bottom:6px;">Breed Explorer 📚</h1>
+  <p style="text-align:center; opacity:.65; font-size:14px; margin-bottom:22px;">A field guide to 30 cat breeds — history, personality, and honest health notes.</p>
+
+  <div class="filter-bar" id="filter-bar">
+    <select class="filter-select" id="coat-filter">
+      <option value="">All coat lengths</option>
+      <option value="hairless">Hairless</option>
+      <option value="short">Short</option>
+      <option value="medium">Medium</option>
+      <option value="long">Long</option>
+    </select>
+    <select class="filter-select" id="energy-filter">
+      <option value="">Any energy level</option>
+      <option value="4">High energy (4+)</option>
+      <option value="1">Calm-friendly (any)</option>
+    </select>
+    <select class="filter-select" id="care-filter">
+      <option value="">Any care level</option>
+      <option value="1">Low-maintenance (1-2)</option>
+      <option value="5">Show me everything</option>
+    </select>
+    <button class="clear-filters" id="clear-filters" style="display:none;">Clear filters ✕</button>
+  </div>
+
+  <div id="breed-count" style="font-size:13px; opacity:.6; margin-bottom:14px;"></div>
+  <div class="breed-grid-explorer" id="breed-grid"></div>
+</div>
+
+<div class="breed-detail-overlay" id="breed-overlay">
+  <div class="breed-detail-card" id="breed-detail-card"></div>
+</div>
+
+<script src="/app.js"></script>
+<script>
+  if (!Meow.requireAuth()) { throw new Error('redirecting'); }
+  Meow.renderNav('breeds');
+
+  const LEVEL_LABEL = { 1: 'Very low', 2: 'Low', 3: 'Moderate', 4: 'High', 5: 'Very high' };
+  const COAT_LABEL = { hairless: 'Hairless', short: 'Short coat', medium: 'Medium coat', long: 'Long coat' };
+
+  function statBarHtml(label, value) {
+    return `
+      <div class="stat-bar-row">
+        <span style="width:78px;">${label}</span>
+        <div class="stat-bar"><i style="width:${value * 20}%;"></i></div>
+        <span>${LEVEL_LABEL[value]}</span>
+      </div>
+    `;
+  }
+
+  function breedCardHtml(b) {
+    return `
+      <div class="card lift breed-card" data-slug="${b.slug}">
+        <div class="breed-emoji">${b.emoji}</div>
+        <h3>${Meow.escapeHtml(b.name)}</h3>
+        <div class="breed-origin-snip">${Meow.escapeHtml(b.origin)}</div>
+        <span class="badge">${COAT_LABEL[b.coatLength]}</span>
+        ${statBarHtml('Energy', b.energyLevel)}
+        ${statBarHtml('Care', b.careDifficulty)}
+      </div>
+    `;
+  }
+
+  async function loadBreeds() {
+    const params = new URLSearchParams();
+    const coat = document.getElementById('coat-filter').value;
+    const energy = document.getElementById('energy-filter').value;
+    const care = document.getElementById('care-filter').value;
+    if (coat) params.set('coat', coat);
+    if (energy) params.set('minEnergy', energy);
+    if (care && care !== '5') params.set('maxCare', care);
+    document.getElementById('clear-filters').style.display = (coat || energy || (care && care !== '5')) ? 'inline-block' : 'none';
+
+    try {
+      const { breeds, total } = await Meow.api(`/api/breeds?${params.toString()}`);
+      document.getElementById('breed-count').textContent = `${total} breed${total === 1 ? '' : 's'}`;
+      const grid = document.getElementById('breed-grid');
+      grid.innerHTML = breeds.map(breedCardHtml).join('');
+      grid.querySelectorAll('.breed-card').forEach(card => {
+        card.addEventListener('click', () => openBreed(card.dataset.slug));
+      });
+    } catch (err) { Meow.toast(err.message); }
+  }
+
+  async function openBreed(slug) {
+    try {
+      const { breed, catsOnPlatform } = await Meow.api(`/api/breeds/${slug}`);
+      const card = document.getElementById('breed-detail-card');
+      card.innerHTML = `
+        <button class="breed-detail-close" id="breed-close-btn" aria-label="Close breed details">✕</button>
+        <div style="font-size:52px; margin-bottom:8px;">${breed.emoji}</div>
+        <h2 class="cute" style="font-size:24px; margin-bottom:2px;">${Meow.escapeHtml(breed.name)}</h2>
+        <span class="badge" style="margin-bottom:14px; display:inline-block;">${COAT_LABEL[breed.coatLength]}</span>
+
+        ${statBarHtml('Energy', breed.energyLevel)}
+        ${statBarHtml('Care level', breed.careDifficulty)}
+        ${statBarHtml('Friendliness', breed.friendliness)}
+
+        <h4 class="text-label" style="margin-top:18px;">History &amp; origin</h4>
+        <p class="text-body" style="margin-top:4px;">${Meow.escapeHtml(breed.origin)}</p>
+
+        <h4 class="text-label" style="margin-top:14px;">Personality</h4>
+        <p class="text-body" style="margin-top:4px;">${Meow.escapeHtml(breed.personality)}</p>
+
+        <h4 class="text-label" style="margin-top:14px;">Health notes</h4>
+        <p class="text-body" style="margin-top:4px;">${Meow.escapeHtml(breed.health)}</p>
+
+        ${breed.related.length ? `
+          <h4 class="text-label" style="margin-top:14px;">Related breeds</h4>
+          <div class="breed-related-row">
+            ${breed.related.map(r => `<button class="chip related-breed-chip" data-slug="${r.slug}">${r.emoji} ${Meow.escapeHtml(r.name)}</button>`).join('')}
+          </div>
+        ` : ''}
+
+        <div style="margin-top:20px; display:flex; gap:10px; flex-wrap:wrap;">
+          <a href="/explore.html?breed=${encodeURIComponent(breed.name)}" class="btn btn-primary">
+            See ${catsOnPlatform} ${breed.name} cat${catsOnPlatform === 1 ? '' : 's'} on Explore
+          </a>
+        </div>
+      `;
+      card.querySelectorAll('.related-breed-chip').forEach(chip => {
+        chip.addEventListener('click', () => openBreed(chip.dataset.slug));
+      });
+      document.getElementById('breed-close-btn').addEventListener('click', closeBreed);
+      document.getElementById('breed-overlay').classList.add('open');
+    } catch (err) { Meow.toast(err.message); }
+  }
+
+  function closeBreed() {
+    document.getElementById('breed-overlay').classList.remove('open');
+  }
+  document.getElementById('breed-overlay').addEventListener('click', (e) => {
+    if (e.target.id === 'breed-overlay') closeBreed();
+  });
+
+  ['coat-filter', 'energy-filter', 'care-filter'].forEach(id => {
+    document.getElementById(id).addEventListener('change', loadBreeds);
+  });
+  document.getElementById('clear-filters').addEventListener('click', () => {
+    document.getElementById('coat-filter').value = '';
+    document.getElementById('energy-filter').value = '';
+    document.getElementById('care-filter').value = '';
+    loadBreeds();
+  });
+
+  loadBreeds();
+</script>
+</body>
+</html>

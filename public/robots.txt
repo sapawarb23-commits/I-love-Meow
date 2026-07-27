@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /login.html
+Disallow: /register.html
+Disallow: /api/
+
+Sitemap: https://ilovemeow.app/sitemap.xml

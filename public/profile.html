@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Profile — I Love Meow</title>
+<meta name="description" content="View Cat Passports, stats, achievements, and photo timelines on I Love Meow profiles.">
+<link rel="canonical" href="https://ilovemeow.app/profile.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Profile — I Love Meow">
+<meta property="og:description" content="View Cat Passports, stats, achievements, and photo timelines on I Love Meow profiles.">
+<meta property="og:url" content="https://ilovemeow.app/profile.html">
+<meta property="og:image" content="https://ilovemeow.app/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Profile — I Love Meow">
+<meta name="twitter:description" content="View Cat Passports, stats, achievements, and photo timelines on I Love Meow profiles.">
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Poppins:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css">
+<script>(function(){var t=localStorage.getItem("ilm_theme")||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",t);})();</script>
+</head>
+<body>
+<div class="bg-blobs" id="bg-blobs"></div>
+<div class="mobile-dock" id="mobile-dock"></div>
+<div class="nav-shell"><nav class="app-nav" id="app-nav"></nav></div>
+
+<div class="wrap page" style="padding-top:8px;">
+  <div class="profile-banner" id="profile-banner">
+    <button type="button" class="cover-edit-btn" id="cover-edit-btn" title="Change cover photo">🖼️ Edit cover</button>
+  </div>
+  <div class="card lift profile-head-card">
+    <div class="profile-head">
+      <div class="avatar-upload-wrap">
+        <div id="user-avatar" style="width:82px; height:82px; font-size:38px;"></div>
+        <button type="button" class="avatar-edit-btn" id="avatar-edit-btn" title="Change profile picture">📷</button>
+      </div>
+      <div>
+        <h1 class="cute" id="user-name" style="font-size:22px;">@username</h1>
+        <span class="badge" id="member-badge">🐾 Clowder member</span>
+        <span class="badge" id="level-tier-badge" style="margin-left:6px; background:var(--color-surface-sunken);">⭐ Level 1</span>
+        <div class="challenge-progress-track" style="max-width:220px; margin-top:8px;">
+          <div class="challenge-progress-fill" id="profile-level-fill" style="width:0%;"></div>
+        </div>
+        <div style="font-size:11px; opacity:.55; margin-top:3px;" id="profile-level-sub"></div>
+        <div class="stat-row">
+          <div><b id="stat-points">0</b>Meowment Points</div>
+          <div><b id="stat-coins">0</b>Fish Coins</div>
+          <div><b id="stat-cats">0</b>Cats</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <input type="file" id="avatar-file-input" accept="image/jpeg,image/png,image/webp" hidden>
+  <input type="file" id="cover-file-input" accept="image/jpeg,image/png,image/webp" hidden>
+  <div class="upload-status-toast" id="avatar-upload-status" style="display:none;"></div>
+
+  <div class="section-title">Add a cat</div>
+  <div class="card lift">
+    <div id="cat-error"></div>
+    <form id="cat-form">
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <div class="field" style="flex:1; min-width:140px;">
+          <label>Name</label>
+          <input type="text" id="cat-name" required maxlength="30">
+        </div>
+        <div class="field" style="flex:1; min-width:140px;">
+          <label>Breed</label>
+          <input type="text" id="cat-breed" maxlength="40" placeholder="e.g. Tabby">
+        </div>
+      </div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <div class="field" style="flex:1; min-width:120px;">
+          <label>Emoji avatar</label>
+          <select id="cat-emoji">
+            <option>🐱</option><option>🐈</option><option>🐈‍⬛</option><option>🦁</option><option>😺</option><option>😻</option>
+          </select>
+        </div>
+        <div class="field" style="flex:1; min-width:120px;">
+          <label>Favorite food</label>
+          <input type="text" id="cat-food" maxlength="40">
+        </div>
+      </div>
+      <div class="field">
+        <label>Bio</label>
+        <textarea id="cat-bio" maxlength="200" placeholder="A little about this cat..."></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary">Add cat</button>
+    </form>
+  </div>
+
+  <div class="section-title">Your cats</div>
+  <div class="cat-grid" id="cat-grid"></div>
+  <div id="cat-empty"></div>
+</div>
+
+<script src="/app.js"></script>
+<script>
+  if (!Meow.requireAuth()) { throw new Error('redirecting'); }
+  Meow.renderNav('profile');
+
+  function renderUser() {
+    document.getElementById('user-avatar').innerHTML = Meow.avatarHtml(Meow.user, { size: 82 });
+    const banner = document.getElementById('profile-banner');
+    banner.style.backgroundImage = Meow.user.cover_url ? `url('${Meow.user.cover_url.replace(/'/g, '%27')}')` : '';
+    banner.classList.toggle('has-cover', !!Meow.user.cover_url);
+    document.getElementById('user-name').textContent = `@${Meow.user.username}`;
+    document.getElementById('stat-points').textContent = Meow.user.meowment_points;
+    document.getElementById('stat-coins').textContent = Meow.user.fish_coins;
+    document.getElementById('level-tier-badge').textContent = `⭐ ${Meow.user.tierName || 'Curious Kitten I'}`;
+    document.getElementById('profile-level-fill').style.width = `${Meow.user.progressPct || 0}%`;
+    document.getElementById('profile-level-sub').textContent =
+      `Level ${Meow.user.level || 1} · ${Meow.user.pointsIntoLevel || 0} / ${Meow.user.pointsForNextLevel || 25} XP to next level`;
+  }
+
+  function renderEmptyCats() {
+    document.getElementById('cat-empty').innerHTML = `
+      <div class="card empty-state">
+        <div class="emoji">🙀🧶</div>
+        <h3 class="cute">No cats yet</h3>
+        <p>Add your first cat above to start building their celebrity profile.</p>
+      </div>
+    `;
+  }
+
+  async function loadCats() {
+    const { cats } = await Meow.api(`/api/cats?owner=${Meow.user.id}`);
+    document.getElementById('stat-cats').textContent = cats.length;
+    const grid = document.getElementById('cat-grid');
+    grid.innerHTML = '';
+    if (!cats.length) { renderEmptyCats(); return; }
+    document.getElementById('cat-empty').innerHTML = '';
+    cats.forEach(c => {
+      grid.insertAdjacentHTML('beforeend', `
+        <div class="card lift cat-chip">
+          <div class="avatar-emoji">${c.avatar_emoji}</div>
+          <div style="font-weight:700; font-size:14px;">${Meow.escapeHtml(c.name)}</div>
+          <div style="font-size:12px; opacity:.6;">${Meow.escapeHtml(c.breed || 'Mixed breed')}</div>
+        </div>
+      `);
+    });
+  }
+
+  async function refreshMe() {
+    const { user } = await Meow.api('/api/auth/me');
+    Meow.user = user;
+    // Write back to whichever storage this session actually lives in (Remember Me choice).
+    const store = localStorage.getItem('ilm_token') ? localStorage : sessionStorage;
+    store.setItem('ilm_user', JSON.stringify(user));
+    renderUser();
+  }
+
+  document.getElementById('cat-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const errBox = document.getElementById('cat-error');
+    errBox.innerHTML = '';
+    try {
+      await Meow.api('/api/cats', {
+        method: 'POST',
+        body: {
+          name: document.getElementById('cat-name').value.trim(),
+          breed: document.getElementById('cat-breed').value.trim(),
+          avatar_emoji: document.getElementById('cat-emoji').value,
+          favorite_food: document.getElementById('cat-food').value.trim(),
+          bio: document.getElementById('cat-bio').value.trim(),
+        },
+      });
+      e.target.reset();
+      Meow.toast('Cat profile created 🐾');
+      loadCats();
+    } catch (err) {
+      errBox.innerHTML = `<div class="error-msg">${Meow.escapeHtml(err.message)}</div>`;
+    }
+  });
+
+  // ---- Avatar / cover photo upload ----
+  // Click-to-upload (with drag & drop also supported on the image itself):
+  // pick a file -> instant local preview -> client-side square-crop/resize
+  // -> direct-to-Cloudinary upload with progress -> save the resulting URL
+  // to the profile. Falls back to a friendly error if Cloudinary isn't
+  // configured on this server (handleUploadSignature returns 501).
+  function statusToast(msg, kind = 'info') {
+    const el = document.getElementById('avatar-upload-status');
+    el.textContent = msg;
+    el.className = `upload-status-toast show ${kind}`;
+    el.style.display = 'block';
+    clearTimeout(el._t);
+    el._t = setTimeout(() => { el.style.display = 'none'; }, kind === 'error' ? 4000 : 2200);
+  }
+
+  async function handlePhotoUpload(file, { type, previewEl, applyPreview, save }) {
+    const err = Meow.validateImageFile(file);
+    if (err) { statusToast(err, 'error'); return; }
+    const localUrl = URL.createObjectURL(file);
+    applyPreview(localUrl);
+    statusToast('Uploading…');
+    try {
+      const compressed = await Meow.compressImage(file, { square: type === 'avatar', maxDim: type === 'avatar' ? 512 : 1600 });
+      const { promise } = Meow.uploadImage(compressed, { type });
+      const cloudinaryResponse = await promise;
+      const url = await Meow.finalizeUpload(cloudinaryResponse);
+      await save(url);
+      statusToast(type === 'avatar' ? 'Profile picture updated! 🐾' : 'Cover photo updated! 🐾', 'success');
+    } catch (e) {
+      statusToast(e.message || 'Upload failed. Please try again.', 'error');
+      renderUser(); // revert local preview back to the last saved image
+    }
+  }
+
+  document.getElementById('avatar-edit-btn').addEventListener('click', () => document.getElementById('avatar-file-input').click());
+  document.getElementById('avatar-file-input').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    e.target.value = '';
+    if (!file) return;
+    handlePhotoUpload(file, {
+      type: 'avatar',
+      applyPreview: (localUrl) => { document.getElementById('user-avatar').innerHTML = `<img class="avatar-emoji avatar-img" style="width:82px;height:82px;" src="${localUrl}" alt="Preview of your new profile picture">`; },
+      save: async (url) => {
+        const { user } = await Meow.api('/api/profile', { method: 'PATCH', body: { avatar_url: url } });
+        Meow.user = user;
+        const store = localStorage.getItem('ilm_token') ? localStorage : sessionStorage;
+        store.setItem('ilm_user', JSON.stringify(user));
+        renderUser();
+      },
+    });
+  });
+
+  document.getElementById('cover-edit-btn').addEventListener('click', () => document.getElementById('cover-file-input').click());
+  document.getElementById('cover-file-input').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    e.target.value = '';
+    if (!file) return;
+    handlePhotoUpload(file, {
+      type: 'cover',
+      applyPreview: (localUrl) => { document.getElementById('profile-banner').style.backgroundImage = `url('${localUrl}')`; document.getElementById('profile-banner').classList.add('has-cover'); },
+      save: async (url) => {
+        const { user } = await Meow.api('/api/profile', { method: 'PATCH', body: { cover_url: url } });
+        Meow.user = user;
+        const store = localStorage.getItem('ilm_token') ? localStorage : sessionStorage;
+        store.setItem('ilm_user', JSON.stringify(user));
+        renderUser();
+      },
+    });
+  });
+
+  renderUser();
+  refreshMe().catch(err => Meow.toast(err.message));
+  loadCats().catch(() => {
+    document.getElementById('cat-empty').innerHTML = Meow.offlineCardHtml('Reload');
+  });
+</script>
+</body>
+</html>
