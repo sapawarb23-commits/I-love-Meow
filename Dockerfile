@@ -47,7 +47,7 @@ COPY --chown=node:node public ./public
 
 # SQLite database file lives on a mounted volume in production — see
 # docker-compose.yml (the `db-data` volume mounted at /app/data).
-VOLUME ["/app/data"]
+
 
 USER node
 
