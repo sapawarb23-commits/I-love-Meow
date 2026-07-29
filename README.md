@@ -30,7 +30,7 @@ in `DEPLOYMENT.md` and `PRODUCTION_CHECKLIST.md`.
 ## What's real right now
 
 - **Backend**: Node.js `http` server (no Express — see "Why no frameworks" below)
-- **Database**: SQLite via Node's built-in `node:sqlite`, real schema, real foreign keys
+- **Database**: SQLite via the `sqlite3` npm package (stable, prebuilt binaries — no experimental runtime APIs), real schema, real foreign keys
 - **Auth**: scrypt password hashing + HMAC-signed session tokens, rate-limited login/register, real 401/403/409 handling
 - **Core feed**: create/delete Meows, Purr (like) toggling, Meowments (comments), cat tagging — all hitting the database, verified end-to-end (see Testing below)
 - **Cat profiles**: name, breed, favorite food/toy, bio, emoji avatar
@@ -53,7 +53,7 @@ upgrade path is:
 | This build | Swap in |
 |---|---|
 | `node:http` routing | Express or Fastify |
-| `node:sqlite` | PostgreSQL + Prisma (the `db.js` functions `run/get/all` are already ORM-shaped, so this is close to a drop-in swap; a Postgres container is already provisioned in `docker-compose.yml` behind the `postgres` profile, waiting for this migration) |
+| `sqlite3` (SQLite) | PostgreSQL + Prisma (the `db.js` functions `run/get/all` are already ORM-shaped and already async/Promise-based, so this is close to a drop-in swap; a Postgres container is already provisioned in `docker-compose.yml` behind the `postgres` profile, waiting for this migration) |
 | Hand-rolled scrypt + HMAC tokens | `argon2` + `jsonwebtoken`, or Auth.js |
 | No realtime | Socket.IO for live notifications/chat |
 | — | OAuth (Google/GitHub/Apple) — needs your own client IDs/secrets regardless of framework |

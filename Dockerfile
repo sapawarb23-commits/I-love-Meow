@@ -7,12 +7,13 @@
 #   1. "deps"    installs production node_modules only (npm ci, cached layer)
 #   2. "runtime" copies app source + deps into a slim, non-root final image
 #
-# The app itself has zero required runtime dependencies (Node's built-in
-# http/sqlite modules), but this Dockerfile still runs `npm ci` so that the
-# optional production integrations (Redis, Sentry, Prometheus client,
-# Cloudinary signing) declared in package.json's "optionalDependencies" are
-# installed when available, without breaking the build if any single one
-# fails to install.
+# Persistence uses the `sqlite3` npm package (stable, ships prebuilt
+# binaries for linux/x64 and linux/arm64 — no node:sqlite, no native
+# compilation needed on Railway/Docker/Linux in the common case). This
+# Dockerfile still runs `npm ci` so that the optional production
+# integrations (Redis, Sentry, Prometheus client, Cloudinary signing)
+# declared in package.json's "optionalDependencies" are installed when
+# available, without breaking the build if any single one fails to install.
 # ---------------------------------------------------------------------------
 
 ARG NODE_VERSION=22.11-alpine
@@ -21,7 +22,8 @@ ARG NODE_VERSION=22.11-alpine
 FROM node:${NODE_VERSION} AS deps
 WORKDIR /app
 
-# Alpine needs build tools for any native addons pulled in transitively.
+# Alpine needs build tools in case any dependency (or its prebuilt-binary
+# fallback path) needs to compile from source on an unusual platform/arch.
 RUN apk add --no-cache python3 make g++
 
 COPY package.json package-lock.json* ./
@@ -37,6 +39,9 @@ ENV NODE_ENV=production \
     PORT=3000
 
 # Non-root user (alpine node images ship a "node" user/group already).
+# db.js also creates this directory itself at startup if it's missing (so
+# a fresh volume mount, or a fresh Railway deploy with no prior filesystem
+# state, still works) — this just ensures correct ownership up front.
 RUN mkdir -p /app/data && chown -R node:node /app
 
 COPY --chown=node:node --from=deps /app/node_modules ./node_modules
@@ -45,9 +50,13 @@ COPY --chown=node:node server.js db.js auth.js validate.js security.js games.js 
 COPY --chown=node:node health.js logger.js metrics.js redis.js rateLimit.js sentry.js cloudinary.js ./
 COPY --chown=node:node public ./public
 
-# SQLite database file lives on a mounted volume in production — see
-# docker-compose.yml (the `db-data` volume mounted at /app/data).
-
+# No VOLUME instruction here on purpose: Railway (and most single-instance
+# PaaS deploys) don't provide durable anonymous volumes the way plain
+# Docker does, and an unmounted VOLUME can mask permission issues instead
+# of surfacing them. For durable storage on your own Docker host, mount a
+# named volume at /app/data via docker-compose.yml (see the `db-data`
+# volume there) or your platform's persistent-disk feature — no Dockerfile
+# change needed either way, since db.js creates /app/data automatically.
 
 USER node
 

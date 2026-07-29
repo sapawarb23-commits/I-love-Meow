@@ -171,34 +171,36 @@ export const ACHIEVEMENTS = [
 ];
 
 // Gathers everything the achievement checks above need, from real rows.
-function buildAchievementContext(userId, justPlayedGame, hitTop3Today) {
-  const rhythmPlays = get(`SELECT COUNT(*) c FROM game_scores WHERE user_id = ? AND game = 'rhythm'`, [userId]).c;
-  const flyerPlays = get(`SELECT COUNT(*) c FROM game_scores WHERE user_id = ? AND game = 'flyer'`, [userId]).c;
-  const bestCombo = get(`SELECT COALESCE(MAX(max_combo),0) c FROM game_scores WHERE user_id = ? AND game = 'rhythm'`, [userId]).c;
-  const bestRhythmHardScore = get(`SELECT COALESCE(MAX(score),0) c FROM game_scores WHERE user_id = ? AND game = 'rhythm' AND difficulty = 'hard'`, [userId]).c;
-  const bestFlyerScore = get(`SELECT COALESCE(MAX(score),0) c FROM game_scores WHERE user_id = ? AND game = 'flyer'`, [userId]).c;
-  const totalGameCoins = get(`SELECT COALESCE(SUM(coins_earned),0) c FROM game_scores WHERE user_id = ?`, [userId]).c;
-  const totalPlays = get(`SELECT COUNT(*) c FROM game_scores WHERE user_id = ?`, [userId]).c;
-  const dailyCompletions = get(`SELECT COUNT(*) c FROM daily_challenge_completions WHERE user_id = ?`, [userId]).c;
+async function buildAchievementContext(userId, justPlayedGame, hitTop3Today) {
+  const rhythmPlays = (await get(`SELECT COUNT(*) c FROM game_scores WHERE user_id = ? AND game = 'rhythm'`, [userId])).c;
+  const flyerPlays = (await get(`SELECT COUNT(*) c FROM game_scores WHERE user_id = ? AND game = 'flyer'`, [userId])).c;
+  const bestCombo = (await get(`SELECT COALESCE(MAX(max_combo),0) c FROM game_scores WHERE user_id = ? AND game = 'rhythm'`, [userId])).c;
+  const bestRhythmHardScore = (await get(`SELECT COALESCE(MAX(score),0) c FROM game_scores WHERE user_id = ? AND game = 'rhythm' AND difficulty = 'hard'`, [userId])).c;
+  const bestFlyerScore = (await get(`SELECT COALESCE(MAX(score),0) c FROM game_scores WHERE user_id = ? AND game = 'flyer'`, [userId])).c;
+  const totalGameCoins = (await get(`SELECT COALESCE(SUM(coins_earned),0) c FROM game_scores WHERE user_id = ?`, [userId])).c;
+  const totalPlays = (await get(`SELECT COUNT(*) c FROM game_scores WHERE user_id = ?`, [userId])).c;
+  const dailyCompletions = (await get(`SELECT COUNT(*) c FROM daily_challenge_completions WHERE user_id = ?`, [userId])).c;
   return { rhythmPlays, flyerPlays, bestCombo, bestRhythmHardScore, bestFlyerScore, totalGameCoins, totalPlays, dailyCompletions, hitTop3Today };
 }
 
-export function checkAndUnlockAchievements(userId, { hitTop3Today = false } = {}) {
-  const ctx = buildAchievementContext(userId, null, hitTop3Today);
-  const already = new Set(all(`SELECT achievement_key FROM user_achievements WHERE user_id = ?`, [userId]).map(r => r.achievement_key));
+export async function checkAndUnlockAchievements(userId, { hitTop3Today = false } = {}) {
+  const ctx = await buildAchievementContext(userId, null, hitTop3Today);
+  const alreadyRows = await all(`SELECT achievement_key FROM user_achievements WHERE user_id = ?`, [userId]);
+  const already = new Set(alreadyRows.map(r => r.achievement_key));
   const newly = [];
   for (const ach of ACHIEVEMENTS) {
     if (already.has(ach.key)) continue;
     if (ach.check(ctx)) {
-      run(`INSERT INTO user_achievements (user_id, achievement_key) VALUES (?, ?)`, [userId, ach.key]);
+      await run(`INSERT INTO user_achievements (user_id, achievement_key) VALUES (?, ?)`, [userId, ach.key]);
       newly.push(ach);
     }
   }
   return newly;
 }
 
-export function achievementsForUser(userId) {
-  const unlocked = new Map(all(`SELECT achievement_key, unlocked_at FROM user_achievements WHERE user_id = ?`, [userId]).map(r => [r.achievement_key, r.unlocked_at]));
+export async function achievementsForUser(userId) {
+  const rows = await all(`SELECT achievement_key, unlocked_at FROM user_achievements WHERE user_id = ?`, [userId]);
+  const unlocked = new Map(rows.map(r => [r.achievement_key, r.unlocked_at]));
   return ACHIEVEMENTS.map(a => ({
     key: a.key, game: a.game, icon: a.icon, name: a.name, description: a.description,
     unlocked: unlocked.has(a.key), unlocked_at: unlocked.get(a.key) || null,
@@ -227,14 +229,14 @@ export function dailyChallengeFor(dateStr) {
   return { ...pick, date: dateStr };
 }
 
-export function maybeCompleteDailyChallenge(userId, { game, difficulty, score }) {
+export async function maybeCompleteDailyChallenge(userId, { game, difficulty, score }) {
   const dateStr = todayDateStr();
   const challenge = dailyChallengeFor(dateStr);
   if (challenge.game !== game) return false;
   if (challenge.game === 'rhythm' && challenge.difficulty !== difficulty) return false;
   if (score < challenge.targetScore) return false;
-  const already = get(`SELECT 1 FROM daily_challenge_completions WHERE user_id = ? AND challenge_date = ?`, [userId, dateStr]);
+  const already = await get(`SELECT 1 FROM daily_challenge_completions WHERE user_id = ? AND challenge_date = ?`, [userId, dateStr]);
   if (already) return false;
-  run(`INSERT INTO daily_challenge_completions (user_id, challenge_date, game) VALUES (?, ?, ?)`, [userId, dateStr, game]);
+  await run(`INSERT INTO daily_challenge_completions (user_id, challenge_date, game) VALUES (?, ?, ?)`, [userId, dateStr, game]);
   return true;
 }

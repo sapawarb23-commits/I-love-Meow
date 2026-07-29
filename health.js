@@ -26,7 +26,7 @@ export async function handleReadiness(res) {
   let healthy = true;
 
   try {
-    get('SELECT 1 AS ok');
+    await get('SELECT 1 AS ok');
     checks.database = { status: 'ok' };
   } catch (err) {
     checks.database = { status: 'error', error: err.message };

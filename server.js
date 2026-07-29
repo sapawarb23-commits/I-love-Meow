@@ -3,9 +3,6 @@
 // Every route below reads from and writes to a real SQLite database.
 // There is no mock data anywhere in this file.
 
-// Load environment variables from .env
-import 'dotenv/config';
-
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -27,16 +24,12 @@ import { handleLiveness, handleReadiness } from './health.js';
 import { handleMetrics, observeHttp } from './metrics.js';
 import { enforceRateLimit } from './rateLimit.js';
 import { captureException } from './sentry.js';
-import {
-  handleUploadSignature,
-  deleteAsset,
-  publicIdFromUrl,
-  MAX_BYTES,
-} from './cloudinary.js';
+import { handleUploadSignature, deleteAsset, publicIdFromUrl, MAX_BYTES } from './cloudinary.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const PORT = process.env.PORT || 3000;
+
 // ---------- helpers ----------
 
 function sendJson(res, status, data) {
@@ -73,12 +66,12 @@ function readBody(req) {
   });
 }
 
-function getAuthedUser(req) {
+async function getAuthedUser(req) {
   const header = req.headers['authorization'] || '';
   const token = header.startsWith('Bearer ') ? header.slice(7) : null;
   const payload = verifyToken(token);
   if (!payload) return null;
-  return get('SELECT * FROM users WHERE id = ?', [payload.sub]);
+  return await get('SELECT * FROM users WHERE id = ?', [payload.sub]);
 }
 
 function publicUser(u) {
@@ -121,15 +114,15 @@ route('POST', '/api/auth/register', async (req, res) => {
   const username = V.username(body.username);
   const email = V.email(body.email);
   const password = V.password(body.password);
-  const existing = get('SELECT id FROM users WHERE username = ? OR email = ?', [username, email]);
+  const existing = await get('SELECT id FROM users WHERE username = ? OR email = ?', [username, email]);
   if (existing) throw new ApiError(409, 'ALREADY_EXISTS', 'That username or email is already taken.');
   const { hash, salt } = hashPassword(password);
   const id = crypto.randomUUID();
-  run(
+  await run(
     'INSERT INTO users (id, username, email, password_hash, password_salt) VALUES (?, ?, ?, ?, ?)',
     [id, username, email, hash, salt]
   );
-  const user = get('SELECT * FROM users WHERE id = ?', [id]);
+  const user = await get('SELECT * FROM users WHERE id = ?', [id]);
   const token = createToken(id);
   sendJson(res, 201, { token, user: publicUser(user) });
 });
@@ -141,7 +134,7 @@ route('POST', '/api/auth/login', async (req, res) => {
   const body = await readBody(req);
   const usernameOrEmail = V.requiredString(body.usernameOrEmail, { field: 'usernameOrEmail', max: 254 });
   const password = V.requiredString(body.password, { field: 'password', max: 200 });
-  const user = get('SELECT * FROM users WHERE username = ? OR email = ?', [usernameOrEmail, usernameOrEmail]);
+  const user = await get('SELECT * FROM users WHERE username = ? OR email = ?', [usernameOrEmail, usernameOrEmail]);
   if (!user || !verifyPassword(password, user.password_hash, user.password_salt)) {
     throw new ApiError(401, 'INVALID_CREDENTIALS', 'Incorrect username/email or password.');
   }
@@ -150,7 +143,7 @@ route('POST', '/api/auth/login', async (req, res) => {
 });
 
 route('GET', '/api/auth/me', async (req, res) => {
-  const user = getAuthedUser(req);
+  const user = await getAuthedUser(req);
   if (!user) return sendJson(res, 401, { error: 'Not authenticated' });
   sendJson(res, 200, { user: publicUser(user) });
 });
@@ -158,7 +151,7 @@ route('GET', '/api/auth/me', async (req, res) => {
 // ---- Cats ----
 
 route('POST', '/api/cats', async (req, res) => {
-  const user = getAuthedUser(req);
+  const user = await getAuthedUser(req);
   if (!user) throw new ApiError(401, 'UNAUTHENTICATED', 'Not authenticated.');
   const body = await readBody(req);
   const name = V.requiredString(body.name, { field: 'name', min: 1, max: 30 });
@@ -171,26 +164,26 @@ route('POST', '/api/cats', async (req, res) => {
   const bio = V.optionalString(body.bio, { field: 'bio', max: 500 });
   const avatar_emoji = V.optionalString(body.avatar_emoji, { field: 'avatar_emoji', max: 8 }) || '🐾';
   const id = crypto.randomUUID();
-  run(
+  await run(
     `INSERT INTO cats (id, owner_id, name, breed, gender, birthday, color, favorite_food, favorite_toy, bio, avatar_emoji)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [id, user.id, name, breed, gender, birthday, color, favorite_food, favorite_toy, bio, avatar_emoji]
   );
-  sendJson(res, 201, { cat: get('SELECT * FROM cats WHERE id = ?', [id]) });
+  sendJson(res, 201, { cat: await get('SELECT * FROM cats WHERE id = ?', [id]) });
 });
 
 route('GET', '/api/cats', async (req, res, params, query) => {
   const ownerId = query.get('owner');
   const cats = ownerId
-    ? all('SELECT * FROM cats WHERE owner_id = ? ORDER BY created_at DESC', [ownerId])
-    : all('SELECT * FROM cats ORDER BY created_at DESC LIMIT 50');
+    ? await all('SELECT * FROM cats WHERE owner_id = ? ORDER BY created_at DESC', [ownerId])
+    : await all('SELECT * FROM cats ORDER BY created_at DESC LIMIT 50');
   sendJson(res, 200, { cats });
 });
 
 route('GET', '/api/cats/:id', async (req, res, params) => {
-  const cat = get('SELECT * FROM cats WHERE id = ?', [params.id]);
+  const cat = await get('SELECT * FROM cats WHERE id = ?', [params.id]);
   if (!cat) return sendJson(res, 404, { error: 'Cat not found' });
-  const owner = get('SELECT id, username, avatar_emoji FROM users WHERE id = ?', [cat.owner_id]);
+  const owner = await get('SELECT id, username, avatar_emoji FROM users WHERE id = ?', [cat.owner_id]);
   sendJson(res, 200, { cat, owner });
 });
 
@@ -206,41 +199,41 @@ const REACTION_TYPES = {
 
 // ---- Meows (feed) ----
 
-function attachCounts(meow, viewerId) {
-  const rows = all('SELECT type, COUNT(*) AS c FROM reactions WHERE meow_id = ? GROUP BY type', [meow.id]);
+async function attachCounts(meow, viewerId) {
+  const rows = await all('SELECT type, COUNT(*) AS c FROM reactions WHERE meow_id = ? GROUP BY type', [meow.id]);
   const counts = {};
   let total = 0;
   for (const r of rows) { counts[r.type] = r.c; total += r.c; }
   const mine = viewerId
-    ? (get('SELECT type FROM reactions WHERE meow_id = ? AND user_id = ?', [meow.id, viewerId])?.type || null)
+    ? (await get('SELECT type FROM reactions WHERE meow_id = ? AND user_id = ?', [meow.id, viewerId]))?.type || null
     : null;
-  const meowmentCount = get('SELECT COUNT(*) AS c FROM meowments WHERE meow_id = ?', [meow.id]).c;
+  const meowmentCount = (await get('SELECT COUNT(*) AS c FROM meowments WHERE meow_id = ?', [meow.id])).c;
   return { ...meow, meowmentCount, reactions: { counts, total, mine } };
 }
 
 route('GET', '/api/feed', async (req, res, params, query) => {
-  const viewer = getAuthedUser(req);
+  const viewer = await getAuthedUser(req);
   const limit = Math.min(parseInt(query.get('limit') || '20', 10), 50);
   const before = query.get('before');
   const rows = before
-    ? all(
+    ? await all(
         `SELECT m.*, u.username AS author_username, u.avatar_emoji AS author_avatar, u.avatar_url AS author_avatar_url, c.name AS cat_name
          FROM meows m JOIN users u ON u.id = m.author_id LEFT JOIN cats c ON c.id = m.cat_id
          WHERE m.created_at < ? ORDER BY m.created_at DESC LIMIT ?`,
         [before, limit]
       )
-    : all(
+    : await all(
         `SELECT m.*, u.username AS author_username, u.avatar_emoji AS author_avatar, u.avatar_url AS author_avatar_url, c.name AS cat_name
          FROM meows m JOIN users u ON u.id = m.author_id LEFT JOIN cats c ON c.id = m.cat_id
          ORDER BY m.created_at DESC LIMIT ?`,
         [limit]
       );
-  const feed = rows.map((r) => attachCounts(r, viewer?.id));
+  const feed = await Promise.all(rows.map((r) => attachCounts(r, viewer?.id)));
   sendJson(res, 200, { feed, empty: feed.length === 0 });
 });
 
 route('POST', '/api/meows', async (req, res) => {
-  const user = getAuthedUser(req);
+  const user = await getAuthedUser(req);
   if (!user) throw new ApiError(401, 'UNAUTHENTICATED', 'Not authenticated.');
   if (tooManyAttempts('post:' + user.id, 15, 60_000)) {
     throw new ApiError(429, 'RATE_LIMITED', "You're posting too quickly. Slow down a little.");
@@ -251,24 +244,25 @@ route('POST', '/api/meows', async (req, res) => {
   if (!caption && !image_url) throw new ApiError(400, 'EMPTY_POST', 'A Meow needs a caption or an image.');
   let cat_id = body.cat_id || null;
   if (cat_id) {
-    const cat = get('SELECT id FROM cats WHERE id = ? AND owner_id = ?', [cat_id, user.id]);
+    const cat = await get('SELECT id FROM cats WHERE id = ? AND owner_id = ?', [cat_id, user.id]);
     if (!cat) throw new ApiError(403, 'FORBIDDEN', 'That cat is not yours to tag.');
   }
   const id = crypto.randomUUID();
-  run('INSERT INTO meows (id, author_id, cat_id, caption, image_url) VALUES (?, ?, ?, ?, ?)', [
+  await run('INSERT INTO meows (id, author_id, cat_id, caption, image_url) VALUES (?, ?, ?, ?, ?)', [
     id, user.id, cat_id, caption, image_url,
   ]);
-  run('UPDATE users SET meowment_points = meowment_points + 5 WHERE id = ?', [user.id]);
-  sendJson(res, 201, { meow: attachCounts(get('SELECT m.*, u.username AS author_username, u.avatar_emoji AS author_avatar, u.avatar_url AS author_avatar_url FROM meows m JOIN users u ON u.id=m.author_id WHERE m.id = ?', [id]), user.id) });
+  await run('UPDATE users SET meowment_points = meowment_points + 5 WHERE id = ?', [user.id]);
+  const newMeow = await get('SELECT m.*, u.username AS author_username, u.avatar_emoji AS author_avatar, u.avatar_url AS author_avatar_url FROM meows m JOIN users u ON u.id=m.author_id WHERE m.id = ?', [id]);
+  sendJson(res, 201, { meow: await attachCounts(newMeow, user.id) });
 });
 
 route('DELETE', '/api/meows/:id', async (req, res, params) => {
-  const user = getAuthedUser(req);
+  const user = await getAuthedUser(req);
   if (!user) return sendJson(res, 401, { error: 'Not authenticated' });
-  const meow = get('SELECT * FROM meows WHERE id = ?', [params.id]);
+  const meow = await get('SELECT * FROM meows WHERE id = ?', [params.id]);
   if (!meow) return sendJson(res, 404, { error: 'Meow not found' });
   if (meow.author_id !== user.id) return sendJson(res, 403, { error: 'You can only delete your own Meows' });
-  run('DELETE FROM meows WHERE id = ?', [params.id]);
+  await run('DELETE FROM meows WHERE id = ?', [params.id]);
   sendJson(res, 200, { ok: true });
 });
 
@@ -279,31 +273,31 @@ route('GET', '/api/reactions/types', async (req, res) => {
 });
 
 route('POST', '/api/meows/:id/react', async (req, res, params) => {
-  const user = getAuthedUser(req);
+  const user = await getAuthedUser(req);
   if (!user) throw new ApiError(401, 'UNAUTHENTICATED', 'Not authenticated.');
   if (tooManyAttempts('react:' + user.id, 60, 60_000)) {
     throw new ApiError(429, 'RATE_LIMITED', 'Too many reactions in a row. Slow down a little.');
   }
-  const meow = get('SELECT * FROM meows WHERE id = ?', [params.id]);
+  const meow = await get('SELECT * FROM meows WHERE id = ?', [params.id]);
   if (!meow) throw new ApiError(404, 'NOT_FOUND', 'Meow not found.');
   const { type } = await readBody(req);
   V.oneOf(type, Object.keys(REACTION_TYPES), { field: 'type' });
 
-  const existing = get('SELECT type FROM reactions WHERE meow_id = ? AND user_id = ?', [params.id, user.id]);
+  const existing = await get('SELECT type FROM reactions WHERE meow_id = ? AND user_id = ?', [params.id, user.id]);
   if (existing && existing.type === type) {
     // Tapping the same reaction again removes it.
-    run('DELETE FROM reactions WHERE meow_id = ? AND user_id = ?', [params.id, user.id]);
+    await run('DELETE FROM reactions WHERE meow_id = ? AND user_id = ?', [params.id, user.id]);
   } else if (existing) {
     // Switching reaction type — one UPDATE, not a delete+insert round trip.
-    run('UPDATE reactions SET type = ?, created_at = datetime(\'now\') WHERE meow_id = ? AND user_id = ?', [type, params.id, user.id]);
+    await run('UPDATE reactions SET type = ?, created_at = datetime(\'now\') WHERE meow_id = ? AND user_id = ?', [type, params.id, user.id]);
   } else {
-    run('INSERT INTO reactions (meow_id, user_id, type) VALUES (?, ?, ?)', [params.id, user.id, type]);
+    await run('INSERT INTO reactions (meow_id, user_id, type) VALUES (?, ?, ?)', [params.id, user.id, type]);
     if (meow.author_id !== user.id) {
-      run('UPDATE users SET meowment_points = meowment_points + 1 WHERE id = ?', [meow.author_id]);
+      await run('UPDATE users SET meowment_points = meowment_points + 1 WHERE id = ?', [meow.author_id]);
     }
   }
 
-  const rows = all('SELECT type, COUNT(*) AS c FROM reactions WHERE meow_id = ? GROUP BY type', [params.id]);
+  const rows = await all('SELECT type, COUNT(*) AS c FROM reactions WHERE meow_id = ? GROUP BY type', [params.id]);
   const counts = {};
   let total = 0;
   for (const r of rows) { counts[r.type] = r.c; total += r.c; }
@@ -333,7 +327,7 @@ function buildThread(rows) {
 }
 
 route('GET', '/api/meows/:id/meowments', async (req, res, params) => {
-  const rows = all(
+  const rows = await all(
     `SELECT mm.*, u.username AS author_username, u.avatar_emoji AS author_avatar, u.avatar_url AS author_avatar_url
      FROM meowments mm JOIN users u ON u.id = mm.author_id
      WHERE mm.meow_id = ? ORDER BY mm.created_at ASC`,
@@ -348,12 +342,12 @@ route('GET', '/api/meows/:id/meowments', async (req, res, params) => {
 });
 
 route('POST', '/api/meows/:id/meowments', async (req, res, params) => {
-  const user = getAuthedUser(req);
+  const user = await getAuthedUser(req);
   if (!user) throw new ApiError(401, 'UNAUTHENTICATED', 'Not authenticated.');
   if (tooManyAttempts('comment:' + user.id, 30, 60_000)) {
     throw new ApiError(429, 'RATE_LIMITED', "You're commenting too quickly. Slow down a little.");
   }
-  const meow = get('SELECT * FROM meows WHERE id = ?', [params.id]);
+  const meow = await get('SELECT * FROM meows WHERE id = ?', [params.id]);
   if (!meow) throw new ApiError(404, 'NOT_FOUND', 'Meow not found.');
   const reqBody = await readBody(req);
   const body = V.optionalString(reqBody.body, { field: 'body', max: 500 });
@@ -361,19 +355,19 @@ route('POST', '/api/meows/:id/meowments', async (req, res, params) => {
   if (!body && !gif_url) throw new ApiError(400, 'EMPTY_COMMENT', 'Meowment cannot be empty.');
   let parent = null;
   if (reqBody.parent_id) {
-    parent = get('SELECT * FROM meowments WHERE id = ? AND meow_id = ?', [reqBody.parent_id, params.id]);
+    parent = await get('SELECT * FROM meowments WHERE id = ? AND meow_id = ?', [reqBody.parent_id, params.id]);
     if (!parent) throw new ApiError(400, 'PARENT_NOT_FOUND', "The comment you're replying to no longer exists.");
   }
   const id = crypto.randomUUID();
-  run(
+  await run(
     'INSERT INTO meowments (id, meow_id, author_id, parent_id, body, gif_url) VALUES (?, ?, ?, ?, ?, ?)',
     [id, params.id, user.id, reqBody.parent_id || null, body, gif_url]
   );
   if (meow.author_id !== user.id) {
-    run('UPDATE users SET meowment_points = meowment_points + 2 WHERE id = ?', [meow.author_id]);
+    await run('UPDATE users SET meowment_points = meowment_points + 2 WHERE id = ?', [meow.author_id]);
   }
   sendJson(res, 201, {
-    meowment: get(
+    meowment: await get(
       `SELECT mm.*, u.username AS author_username, u.avatar_emoji AS author_avatar, u.avatar_url AS author_avatar_url
        FROM meowments mm JOIN users u ON u.id = mm.author_id WHERE mm.id = ?`,
       [id]
@@ -382,17 +376,17 @@ route('POST', '/api/meows/:id/meowments', async (req, res, params) => {
 });
 
 route('PATCH', '/api/meowments/:id', async (req, res, params) => {
-  const user = getAuthedUser(req);
+  const user = await getAuthedUser(req);
   if (!user) return sendJson(res, 401, { error: 'Not authenticated' });
-  const mm = get('SELECT * FROM meowments WHERE id = ?', [params.id]);
+  const mm = await get('SELECT * FROM meowments WHERE id = ?', [params.id]);
   if (!mm || mm.deleted) return sendJson(res, 404, { error: 'Meowment not found' });
   if (mm.author_id !== user.id) return sendJson(res, 403, { error: 'You can only edit your own Meowments' });
   const { body } = await readBody(req);
   if (!body || !body.trim()) return sendJson(res, 400, { error: 'Meowment cannot be empty' });
   if (body.length > 500) return sendJson(res, 400, { error: 'Meowment is too long (max 500 characters)' });
-  run('UPDATE meowments SET body = ?, edited_at = datetime(\'now\') WHERE id = ?', [body.trim(), params.id]);
+  await run('UPDATE meowments SET body = ?, edited_at = datetime(\'now\') WHERE id = ?', [body.trim(), params.id]);
   sendJson(res, 200, {
-    meowment: get(
+    meowment: await get(
       `SELECT mm.*, u.username AS author_username, u.avatar_emoji AS author_avatar, u.avatar_url AS author_avatar_url
        FROM meowments mm JOIN users u ON u.id = mm.author_id WHERE mm.id = ?`,
       [params.id]
@@ -401,38 +395,38 @@ route('PATCH', '/api/meowments/:id', async (req, res, params) => {
 });
 
 route('DELETE', '/api/meowments/:id', async (req, res, params) => {
-  const user = getAuthedUser(req);
+  const user = await getAuthedUser(req);
   if (!user) return sendJson(res, 401, { error: 'Not authenticated' });
-  const mm = get('SELECT * FROM meowments WHERE id = ?', [params.id]);
+  const mm = await get('SELECT * FROM meowments WHERE id = ?', [params.id]);
   if (!mm) return sendJson(res, 404, { error: 'Meowment not found' });
-  const meow = get('SELECT * FROM meows WHERE id = ?', [mm.meow_id]);
+  const meow = await get('SELECT * FROM meows WHERE id = ?', [mm.meow_id]);
   const canDelete = mm.author_id === user.id || (meow && meow.author_id === user.id);
   if (!canDelete) return sendJson(res, 403, { error: 'You can only delete your own Meowments (or ones on your own Meow)' });
-  const hasReplies = get('SELECT COUNT(*) AS c FROM meowments WHERE parent_id = ?', [params.id]).c > 0;
+  const hasReplies = (await get('SELECT COUNT(*) AS c FROM meowments WHERE parent_id = ?', [params.id])).c > 0;
   if (hasReplies) {
     // Soft delete so replies underneath keep their place in the thread.
-    run('UPDATE meowments SET deleted = 1, body = \'\', gif_url = \'\', pinned = 0 WHERE id = ?', [params.id]);
+    await run('UPDATE meowments SET deleted = 1, body = \'\', gif_url = \'\', pinned = 0 WHERE id = ?', [params.id]);
   } else {
-    run('DELETE FROM meowments WHERE id = ?', [params.id]);
+    await run('DELETE FROM meowments WHERE id = ?', [params.id]);
   }
   sendJson(res, 200, { ok: true });
 });
 
 route('POST', '/api/meowments/:id/pin', async (req, res, params) => {
-  const user = getAuthedUser(req);
+  const user = await getAuthedUser(req);
   if (!user) return sendJson(res, 401, { error: 'Not authenticated' });
-  const mm = get('SELECT * FROM meowments WHERE id = ?', [params.id]);
+  const mm = await get('SELECT * FROM meowments WHERE id = ?', [params.id]);
   if (!mm || mm.deleted) return sendJson(res, 404, { error: 'Meowment not found' });
   if (mm.parent_id) return sendJson(res, 400, { error: 'Only top-level Meowments can be pinned' });
-  const meow = get('SELECT * FROM meows WHERE id = ?', [mm.meow_id]);
+  const meow = await get('SELECT * FROM meows WHERE id = ?', [mm.meow_id]);
   if (!meow || meow.author_id !== user.id) return sendJson(res, 403, { error: 'Only the Meow\'s author can pin a comment' });
   if (mm.pinned) {
-    run('UPDATE meowments SET pinned = 0 WHERE id = ?', [params.id]);
+    await run('UPDATE meowments SET pinned = 0 WHERE id = ?', [params.id]);
     return sendJson(res, 200, { pinned: false });
   }
   // Only one pinned comment per Meow at a time.
-  run('UPDATE meowments SET pinned = 0 WHERE meow_id = ?', [mm.meow_id]);
-  run('UPDATE meowments SET pinned = 1 WHERE id = ?', [params.id]);
+  await run('UPDATE meowments SET pinned = 0 WHERE meow_id = ?', [mm.meow_id]);
+  await run('UPDATE meowments SET pinned = 1 WHERE id = ?', [params.id]);
   sendJson(res, 200, { pinned: true });
 });
 
@@ -449,13 +443,15 @@ function ageBucket(birthday) {
 }
 
 route('GET', '/api/explore/filters', async (req, res) => {
-  const breeds = all(`SELECT DISTINCT breed FROM cats WHERE breed != '' ORDER BY breed ASC`).map(r => r.breed);
-  const colors = all(`SELECT DISTINCT color FROM cats WHERE color != '' ORDER BY color ASC`).map(r => r.color);
+  const breedRows = await all(`SELECT DISTINCT breed FROM cats WHERE breed != '' ORDER BY breed ASC`);
+  const colorRows = await all(`SELECT DISTINCT color FROM cats WHERE color != '' ORDER BY color ASC`);
+  const breeds = breedRows.map(r => r.breed);
+  const colors = colorRows.map(r => r.color);
   sendJson(res, 200, { breeds, colors });
 });
 
 route('GET', '/api/explore', async (req, res, params, query) => {
-  const viewer = getAuthedUser(req);
+  const viewer = await getAuthedUser(req);
   const breed = query.get('breed') || '';
   const color = query.get('color') || '';
   const age = query.get('age') || ''; // kitten | adult | senior
@@ -471,7 +467,7 @@ route('GET', '/api/explore', async (req, res, params, query) => {
 
   // Pull a generous window, then apply the age-bucket filter (computed from
   // birthday in JS, since SQLite date math is awkward) and sort/paginate.
-  let rows = all(
+  let rows = await all(
     `SELECT m.*, u.username AS author_username, u.avatar_emoji AS author_avatar, u.avatar_url AS author_avatar_url,
             c.name AS cat_name, c.breed AS cat_breed, c.color AS cat_color, c.birthday AS cat_birthday
      FROM meows m
@@ -485,7 +481,7 @@ route('GET', '/api/explore', async (req, res, params, query) => {
 
   if (age) rows = rows.filter(r => ageBucket(r.cat_birthday) === age);
 
-  let shaped = rows.map(r => attachCounts(r, viewer?.id));
+  let shaped = await Promise.all(rows.map(r => attachCounts(r, viewer?.id)));
 
   if (sort === 'trending') {
     shaped.sort((a, b) => (b.reactions.total - a.reactions.total) || a.created_at.localeCompare(b.created_at) * -1);
@@ -507,17 +503,17 @@ route('GET', '/api/search', async (req, res, params, query) => {
   if (q.length < 2) return sendJson(res, 200, { users: [], cats: [], meows: [] });
   const like = `%${q.replace(/[%_]/g, '')}%`;
 
-  const users = all(
+  const users = await all(
     `SELECT id, username, avatar_emoji, avatar_url, meowment_points FROM users WHERE username LIKE ? ORDER BY meowment_points DESC LIMIT 6`,
     [like]
   );
-  const cats = all(
+  const cats = await all(
     `SELECT cats.id, cats.name, cats.breed, cats.avatar_emoji, u.username AS owner_username
      FROM cats JOIN users u ON u.id = cats.owner_id
      WHERE cats.name LIKE ? OR cats.breed LIKE ? ORDER BY cats.created_at DESC LIMIT 6`,
     [like, like]
   );
-  const meows = all(
+  const meows = await all(
     `SELECT m.id, m.caption, m.image_url, m.created_at, u.username AS author_username
      FROM meows m JOIN users u ON u.id = m.author_id
      WHERE m.caption LIKE ? ORDER BY m.created_at DESC LIMIT 6`,
@@ -526,14 +522,14 @@ route('GET', '/api/search', async (req, res, params, query) => {
 
   // Log real, non-trivial searches for trending-search computation.
   if (q.length >= 2 && q.length <= 60) {
-    run('INSERT INTO search_logs (id, query) VALUES (?, ?)', [crypto.randomUUID(), q.toLowerCase()]);
+    await run('INSERT INTO search_logs (id, query) VALUES (?, ?)', [crypto.randomUUID(), q.toLowerCase()]);
   }
 
   sendJson(res, 200, { users, cats, meows });
 });
 
 route('GET', '/api/search/trending', async (req, res) => {
-  const rows = all(
+  const rows = await all(
     `SELECT query, COUNT(*) AS c FROM search_logs
      WHERE created_at >= datetime('now', '-7 days')
      GROUP BY query ORDER BY c DESC, query ASC LIMIT 8`
@@ -544,7 +540,7 @@ route('GET', '/api/search/trending', async (req, res) => {
 // ---- Games ----
 
 route('POST', '/api/games/session', async (req, res) => {
-  const user = getAuthedUser(req);
+  const user = await getAuthedUser(req);
   if (!user) throw new ApiError(401, 'UNAUTHENTICATED', 'Not authenticated.');
   if (tooManyAttempts('game-session:' + user.id, 20, 60_000)) {
     throw new ApiError(429, 'RATE_LIMITED', 'Too many game sessions started at once. Slow down a little.');
@@ -553,16 +549,16 @@ route('POST', '/api/games/session', async (req, res) => {
   V.oneOf(game, GAMES, { field: 'game' });
   if (game === 'rhythm') V.oneOf(difficulty, RHYTHM_DIFFICULTIES, { field: 'difficulty' });
   const id = crypto.randomUUID();
-  run('INSERT INTO game_sessions (id, user_id, game, difficulty) VALUES (?, ?, ?, ?)', [id, user.id, game, difficulty || 'default']);
+  await run('INSERT INTO game_sessions (id, user_id, game, difficulty) VALUES (?, ?, ?, ?)', [id, user.id, game, difficulty || 'default']);
   sendJson(res, 201, { session_id: id });
 });
 
 route('POST', '/api/games/scores', async (req, res) => {
-  const user = getAuthedUser(req);
+  const user = await getAuthedUser(req);
   if (!user) return sendJson(res, 401, { error: 'Not authenticated' });
   const { session_id, score, max_combo, duration_ms, coins_collected } = await readBody(req);
 
-  const session = get('SELECT * FROM game_sessions WHERE id = ?', [session_id]);
+  const session = await get('SELECT * FROM game_sessions WHERE id = ?', [session_id]);
   if (!session || session.user_id !== user.id) return sendJson(res, 404, { error: 'Game session not found' });
   if (session.used) return sendJson(res, 400, { error: 'This game session was already submitted' });
   const startedMs = new Date(session.started_at.replace(' ', 'T') + 'Z').getTime();
@@ -574,32 +570,32 @@ route('POST', '/api/games/scores', async (req, res) => {
   });
   if (err) return sendJson(res, 400, { error: err });
 
-  run('UPDATE game_sessions SET used = 1 WHERE id = ?', [session_id]);
+  await run('UPDATE game_sessions SET used = 1 WHERE id = ?', [session_id]);
 
   const reward = session.game === 'rhythm'
     ? computeRhythmReward({ score: Number(score), difficulty: session.difficulty, maxCombo: Number(max_combo) || 0 })
     : computeFlyerReward({ score: Number(score), coinsCollected: Number(coins_collected) || 0 });
 
   const scoreId = crypto.randomUUID();
-  run(
+  await run(
     `INSERT INTO game_scores (id, user_id, game, difficulty, score, max_combo, duration_ms, coins_earned, xp_earned)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [scoreId, user.id, session.game, session.difficulty, Number(score), Number(max_combo) || 0, Number(duration_ms), reward.coins, reward.xp]
   );
-  run('UPDATE users SET fish_coins = fish_coins + ?, meowment_points = meowment_points + ? WHERE id = ?', [reward.coins, reward.xp, user.id]);
+  await run('UPDATE users SET fish_coins = fish_coins + ?, meowment_points = meowment_points + ? WHERE id = ?', [reward.coins, reward.xp, user.id]);
 
-  const challengeCompleted = maybeCompleteDailyChallenge(user.id, { game: session.game, difficulty: session.difficulty, score: Number(score) });
+  const challengeCompleted = await maybeCompleteDailyChallenge(user.id, { game: session.game, difficulty: session.difficulty, score: Number(score) });
 
   // Did this run land in today's top 3 for its game? (feeds the Podium Finish achievement)
-  const todayTop3 = all(
+  const todayTop3 = await all(
     `SELECT user_id, MAX(score) AS best FROM game_scores
      WHERE game = ? AND date(created_at) = date('now') GROUP BY user_id ORDER BY best DESC LIMIT 3`,
     [session.game]
   );
   const hitTop3Today = todayTop3.some(r => r.user_id === user.id);
 
-  const newAchievements = checkAndUnlockAchievements(user.id, { hitTop3Today });
-  const updatedUser = get('SELECT * FROM users WHERE id = ?', [user.id]);
+  const newAchievements = await checkAndUnlockAchievements(user.id, { hitTop3Today });
+  const updatedUser = await get('SELECT * FROM users WHERE id = ?', [user.id]);
 
   sendJson(res, 201, {
     score_id: scoreId,
@@ -619,7 +615,7 @@ route('GET', '/api/games/leaderboard', async (req, res, params, query) => {
   if (period === 'daily') dateClause = `AND date(gs.created_at) = date('now')`;
   else if (period === 'weekly') dateClause = `AND gs.created_at >= datetime('now', '-7 days')`;
 
-  const rows = all(
+  const rows = await all(
     `SELECT u.username, u.avatar_emoji, MAX(gs.score) AS best_score, gs.difficulty
      FROM game_scores gs JOIN users u ON u.id = gs.user_id
      WHERE gs.game = ? ${dateClause}
@@ -632,32 +628,32 @@ route('GET', '/api/games/leaderboard', async (req, res, params, query) => {
 });
 
 route('GET', '/api/games/daily-challenge', async (req, res) => {
-  const user = getAuthedUser(req);
+  const user = await getAuthedUser(req);
   const dateStr = todayDateStr();
   const challenge = dailyChallengeFor(dateStr);
   const completed = user
-    ? !!get('SELECT 1 FROM daily_challenge_completions WHERE user_id = ? AND challenge_date = ?', [user.id, dateStr])
+    ? !!(await get('SELECT 1 FROM daily_challenge_completions WHERE user_id = ? AND challenge_date = ?', [user.id, dateStr]))
     : false;
   sendJson(res, 200, { challenge, completed });
 });
 
 route('GET', '/api/games/achievements', async (req, res) => {
-  const user = getAuthedUser(req);
+  const user = await getAuthedUser(req);
   if (!user) return sendJson(res, 401, { error: 'Not authenticated' });
-  sendJson(res, 200, { achievements: achievementsForUser(user.id) });
+  sendJson(res, 200, { achievements: await achievementsForUser(user.id) });
 });
 
 route('GET', '/api/games/hub', async (req, res) => {
-  const user = getAuthedUser(req);
+  const user = await getAuthedUser(req);
   if (!user) return sendJson(res, 401, { error: 'Not authenticated' });
 
-  const bestRhythm = get(`SELECT MAX(score) AS s FROM game_scores WHERE user_id = ? AND game = 'rhythm'`, [user.id]).s || 0;
-  const bestFlyer = get(`SELECT MAX(score) AS s FROM game_scores WHERE user_id = ? AND game = 'flyer'`, [user.id]).s || 0;
-  const totalPlays = get(`SELECT COUNT(*) c FROM game_scores WHERE user_id = ?`, [user.id]).c;
-  const totalCoins = get(`SELECT COALESCE(SUM(coins_earned),0) c FROM game_scores WHERE user_id = ?`, [user.id]).c;
-  const totalXp = get(`SELECT COALESCE(SUM(xp_earned),0) c FROM game_scores WHERE user_id = ?`, [user.id]).c;
+  const bestRhythm = (await get(`SELECT MAX(score) AS s FROM game_scores WHERE user_id = ? AND game = 'rhythm'`, [user.id])).s || 0;
+  const bestFlyer = (await get(`SELECT MAX(score) AS s FROM game_scores WHERE user_id = ? AND game = 'flyer'`, [user.id])).s || 0;
+  const totalPlays = (await get(`SELECT COUNT(*) c FROM game_scores WHERE user_id = ?`, [user.id])).c;
+  const totalCoins = (await get(`SELECT COALESCE(SUM(coins_earned),0) c FROM game_scores WHERE user_id = ?`, [user.id])).c;
+  const totalXp = (await get(`SELECT COALESCE(SUM(xp_earned),0) c FROM game_scores WHERE user_id = ?`, [user.id])).c;
 
-  const recentlyPlayed = all(
+  const recentlyPlayed = await all(
     `SELECT game, difficulty, score, max_combo, created_at FROM game_scores WHERE user_id = ? ORDER BY created_at DESC LIMIT 5`,
     [user.id]
   );
@@ -666,9 +662,9 @@ route('GET', '/api/games/hub', async (req, res) => {
 
   const dateStr = todayDateStr();
   const challenge = dailyChallengeFor(dateStr);
-  const challengeCompleted = !!get('SELECT 1 FROM daily_challenge_completions WHERE user_id = ? AND challenge_date = ?', [user.id, dateStr]);
+  const challengeCompleted = !!(await get('SELECT 1 FROM daily_challenge_completions WHERE user_id = ? AND challenge_date = ?', [user.id, dateStr]));
 
-  const achievements = achievementsForUser(user.id);
+  const achievements = await achievementsForUser(user.id);
 
   sendJson(res, 200, {
     continuePlaying: lastPlayed ? { game: lastPlayed.game, difficulty: lastPlayed.difficulty } : null,
@@ -703,7 +699,7 @@ route('GET', '/api/breeds', async (req, res, params, query) => {
 route('GET', '/api/breeds/:slug', async (req, res, params) => {
   const breed = getBreed(params.slug);
   if (!breed) throw new ApiError(404, 'NOT_FOUND', 'No breed found with that name.');
-  const catCount = get('SELECT COUNT(*) AS c FROM cats WHERE breed = ?', [breed.name]).c;
+  const catCount = (await get('SELECT COUNT(*) AS c FROM cats WHERE breed = ?', [breed.name])).c;
   sendJson(res, 200, {
     breed: { ...breed, related: relatedBreedsFor(params.slug).map(({ related, ...rest }) => rest) },
     catsOnPlatform: catCount,
@@ -719,7 +715,7 @@ route('GET', '/api/health', async (req, res) => {
 // ---- Uploads (Cloudinary signed direct upload — see cloudinary.js) ----
 
 route('POST', '/api/upload/signature', async (req, res, params, query) => {
-  const user = getAuthedUser(req);
+  const user = await getAuthedUser(req);
   if (!user) throw new ApiError(401, 'UNAUTHORIZED', 'Log in to upload images.');
   handleUploadSignature(req, res, { type: query.get('type') });
 });
@@ -733,7 +729,7 @@ route('POST', '/api/upload/signature', async (req, res, params, query) => {
 // reject; the browser then shows the person a friendly error and never
 // stores that URL anywhere.
 route('POST', '/api/upload/verify', async (req, res) => {
-  const user = getAuthedUser(req);
+  const user = await getAuthedUser(req);
   if (!user) throw new ApiError(401, 'UNAUTHENTICATED', 'Not authenticated.');
   const body = await readBody(req);
   const secure_url = V.url(body.secure_url, { field: 'secure_url' });
@@ -756,7 +752,7 @@ route('POST', '/api/upload/verify', async (req, res) => {
 // still validate it's a well-formed http(s) URL (same rule as meow
 // image_url) rather than trusting the client blindly.
 route('PATCH', '/api/profile', async (req, res) => {
-  const user = getAuthedUser(req);
+  const user = await getAuthedUser(req);
   if (!user) throw new ApiError(401, 'UNAUTHENTICATED', 'Not authenticated.');
   const body = await readBody(req);
   const updates = {};
@@ -764,8 +760,9 @@ route('PATCH', '/api/profile', async (req, res) => {
   if (body.cover_url !== undefined) updates.cover_url = V.optionalUrl(body.cover_url, { field: 'cover_url' });
   const keys = Object.keys(updates);
   if (!keys.length) throw new ApiError(400, 'NO_CHANGES', 'Nothing to update.');
-  run(`UPDATE users SET ${keys.map((k) => `${k} = ?`).join(', ')} WHERE id = ?`, [...keys.map((k) => updates[k]), user.id]);
-  sendJson(res, 200, { user: publicUser(get('SELECT * FROM users WHERE id = ?', [user.id])) });
+  await run(`UPDATE users SET ${keys.map((k) => `${k} = ?`).join(', ')} WHERE id = ?`, [...keys.map((k) => updates[k]), user.id]);
+  const updated = await get('SELECT * FROM users WHERE id = ?', [user.id]);
+  sendJson(res, 200, { user: publicUser(updated) });
 });
 
 // ---------- static file serving ----------

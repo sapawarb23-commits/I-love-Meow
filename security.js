@@ -14,7 +14,8 @@ const CSP = [
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com",
   "img-src 'self' data: blob: https: http:", // Meows/GIFs can point at any http(s) image URL; blob: needed for local file previews before upload
-"connect-src 'self' https://api.cloudinary.com https://res.cloudinary.com",  "frame-ancestors 'none'",
+  "connect-src 'self'",
+  "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",
 ].join('; ');
