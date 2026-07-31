@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "engines": { "node": ">=22.5.0" },
+  "engines": {
+    "node": ">=22.5.0"
+  },
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
@@ -15,11 +17,12 @@
   },
   "description": "I Love Meow — a real, running social platform for cat lovers. Persistence uses the `sqlite3` package (stable, ships prebuilt binaries — no node:sqlite, no native build tools required on Railway/Docker/Linux). The optional dependencies below power production infrastructure (Redis-backed rate limiting/caching, Prometheus metrics, Sentry error tracking) and are only imported if installed and configured via env vars — the app runs fine without any of them.",
   "dependencies": {
+    "dotenv": "^17.4.2",
     "sqlite3": "^5.1.7"
   },
   "optionalDependencies": {
+    "@sentry/node": "^8.42.0",
     "ioredis": "^5.4.1",
-    "prom-client": "^15.1.3",
-    "@sentry/node": "^8.42.0"
+    "prom-client": "^15.1.3"
   }
 }

@@ -2,7 +2,8 @@
 // (no Express — it isn't installable here without npm registry access).
 // Every route below reads from and writes to a real SQLite database.
 // There is no mock data anywhere in this file.
-
+import 'dotenv/config';
+console.log("Cloudinary:", process.env.CLOUDINARY_CLOUD_NAME);
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -114,8 +115,21 @@ route('POST', '/api/auth/register', async (req, res) => {
   const username = V.username(body.username);
   const email = V.email(body.email);
   const password = V.password(body.password);
-  const existing = await get('SELECT id FROM users WHERE username = ? OR email = ?', [username, email]);
-  if (existing) throw new ApiError(409, 'ALREADY_EXISTS', 'That username or email is already taken.');
+  console.log("===== REGISTER REQUEST =====");
+console.log("Username:", username);
+console.log("Email:", email);
+
+const existing = await get(
+  'SELECT id FROM users WHERE username = ? OR email = ?',
+  [username, email]
+);
+
+console.log("Existing:", existing);
+
+if (existing) {
+  console.log("Duplicate found!");
+  throw new ApiError(409, 'ALREADY_EXISTS', 'That username or email is already taken.');
+}
   const { hash, salt } = hashPassword(password);
   const id = crypto.randomUUID();
   await run(
