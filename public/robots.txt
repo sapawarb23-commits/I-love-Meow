@@ -4,4 +4,4 @@ Disallow: /login.html
 Disallow: /register.html
 Disallow: /api/
 
-Sitemap: https://ilovemeow.app/sitemap.xml
+Sitemap: https://www.ilovemeow.in/sitemap.xml
