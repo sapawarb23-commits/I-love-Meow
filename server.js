@@ -602,9 +602,11 @@ route('GET', '/api/virtual-cat/bond', async (req, res) => {
         bond = await get('SELECT * FROM virtual_cat_bonds WHERE user_id = ?', [user.id]);
         return sendJson(res, 200, { ...bond, fish_coins: user.fish_coins, protected_days: missedDays, greeting: 'I missed you... are you my hooman? 🥺' });
       }
+      // Use up the remaining free Paw Saves when the missed days exceed
+      // the available allowance. The bond then waits for paid recovery.
       await run(
-        `UPDATE virtual_cat_bonds SET pending_recovery = 1, updated_at = datetime('now')
-         WHERE user_id = ?`,
+        `UPDATE virtual_cat_bonds SET paw_saves = 0, pending_recovery = 1,
+         updated_at = datetime('now') WHERE user_id = ?`,
         [user.id]
       );
     }
