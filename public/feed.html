@@ -66,7 +66,7 @@
   if (!Meow.requireAuth()) { throw new Error('redirecting'); }
   Meow.renderNav('feed');
 
-  let oldestTimestamp = null;
+  let oldestMeow = null;
 
   function meowCardHtml(m) {
     const catTag = m.cat_name ? ` · with <b>${Meow.escapeHtml(m.cat_name)}</b>` : '';
@@ -312,23 +312,35 @@
   }
 
   async function loadFeed(initial = true) {
+    const loadButton = document.getElementById('load-more');
+    if (loadButton.dataset.loading === 'true') return;
+    loadButton.dataset.loading = 'true';
+    loadButton.disabled = true;
     try {
-      const url = oldestTimestamp ? `/api/feed?before=${encodeURIComponent(oldestTimestamp)}` : '/api/feed';
+      const params = new URLSearchParams();
+      if (oldestMeow) {
+        params.set('before', oldestMeow.created_at);
+        params.set('beforeId', oldestMeow.id);
+      }
+      const url = params.size ? `/api/feed?${params.toString()}` : '/api/feed';
       const { feed, empty } = await Meow.api(url);
       document.getElementById('feed-skeleton').style.display = 'none';
       const listEl = document.getElementById('feed-list');
-      if (initial && empty) { renderEmptyState(); document.getElementById('load-more').style.display = 'none'; return; }
+      if (initial && empty) { renderEmptyState(); loadButton.style.display = 'none'; return; }
       document.getElementById('feed-empty').innerHTML = '';
       feed.forEach(m => {
         listEl.insertAdjacentHTML('beforeend', meowCardHtml(m));
         attachCardHandlers(listEl.lastElementChild, m);
       });
-      if (feed.length) oldestTimestamp = feed[feed.length - 1].created_at;
-      document.getElementById('load-more').style.display = feed.length === 20 ? 'block' : 'none';
+      if (feed.length) oldestMeow = feed[feed.length - 1];
+      loadButton.style.display = feed.length === 20 ? 'block' : 'none';
     } catch (err) {
       document.getElementById('feed-skeleton').style.display = 'none';
       Meow.toast(err.message);
       if (initial) document.getElementById('feed-empty').innerHTML = Meow.offlineCardHtml('Reload feed');
+    } finally {
+      loadButton.dataset.loading = 'false';
+      loadButton.disabled = false;
     }
   }
 

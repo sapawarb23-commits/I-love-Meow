@@ -227,23 +227,41 @@ async function attachCounts(meow, viewerId) {
 
 route('GET', '/api/feed', async (req, res, params, query) => {
   const viewer = await getAuthedUser(req);
-  const limit = Math.min(parseInt(query.get('limit') || '20', 10), 50);
+  const requestedLimit = Number.parseInt(query.get('limit') || '20', 10);
+  const limit = Number.isFinite(requestedLimit) ? Math.max(1, Math.min(requestedLimit, 50)) : 20;
   const before = query.get('before');
-  const rows = before
-    ? await all(
-        `SELECT m.*, u.username AS author_username, u.avatar_emoji AS author_avatar, u.avatar_url AS author_avatar_url, c.name AS cat_name
-         FROM meows m JOIN users u ON u.id = m.author_id LEFT JOIN cats c ON c.id = m.cat_id
-         WHERE m.created_at < ? ORDER BY m.created_at DESC LIMIT ?`,
-        [before, limit]
-      )
-    : await all(
-        `SELECT m.*, u.username AS author_username, u.avatar_emoji AS author_avatar, u.avatar_url AS author_avatar_url, c.name AS cat_name
-         FROM meows m JOIN users u ON u.id = m.author_id LEFT JOIN cats c ON c.id = m.cat_id
-         ORDER BY m.created_at DESC LIMIT ?`,
-        [limit]
-      );
+  const beforeId = query.get('beforeId');
+  const authorId = query.get('author');
+  const conditions = [];
+  const values = [];
+
+  // Optional author filter powers each user's complete Meow archive.
+  if (authorId) {
+    conditions.push('m.author_id = ?');
+    values.push(authorId);
+  }
+
+  // Use a compound cursor so posts created in the same second are not skipped.
+  if (before) {
+    if (beforeId) {
+      conditions.push('(m.created_at < ? OR (m.created_at = ? AND m.id < ?))');
+      values.push(before, before, beforeId);
+    } else {
+      conditions.push('m.created_at < ?');
+      values.push(before);
+    }
+  }
+
+  const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+  const rows = await all(
+    `SELECT m.*, u.username AS author_username, u.avatar_emoji AS author_avatar, u.avatar_url AS author_avatar_url, c.name AS cat_name
+     FROM meows m JOIN users u ON u.id = m.author_id LEFT JOIN cats c ON c.id = m.cat_id
+     ${where}
+     ORDER BY m.created_at DESC, m.id DESC LIMIT ?`,
+    [...values, limit]
+  );
   const feed = await Promise.all(rows.map((r) => attachCounts(r, viewer?.id)));
-  sendJson(res, 200, { feed, empty: feed.length === 0 });
+  sendJson(res, 200, { feed, empty: feed.length === 0, hasMore: feed.length === limit });
 });
 
 route('POST', '/api/meows', async (req, res) => {

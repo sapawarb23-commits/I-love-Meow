@@ -91,6 +91,9 @@ CREATE TABLE IF NOT EXISTS meows (
   created_at TEXT DEFAULT (datetime('now'))
 );
 
+CREATE INDEX IF NOT EXISTS idx_meows_author_created
+  ON meows(author_id, created_at DESC, id DESC);
+
 CREATE TABLE IF NOT EXISTS purrs (
   meow_id TEXT NOT NULL REFERENCES meows(id) ON DELETE CASCADE,
   user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
