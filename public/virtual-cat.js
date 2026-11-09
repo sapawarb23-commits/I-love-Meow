@@ -7,7 +7,41 @@
   let state = {...defaults};
   try { state = {...defaults,...JSON.parse(localStorage.getItem(userKey) || '{}')}; } catch {}
   const $ = id => document.getElementById(id);
+
   const pet = $('pixel-pet'), room = $('pixel-room');
+  let soundEnabled=true,audioContext=null,noiseBuffer=null;
+  function getAudio(){
+    if(!soundEnabled)return null;
+    const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return null;
+    if(!audioContext)audioContext=new AC();
+    if(audioContext.state==='suspended')audioContext.resume();
+    if(!noiseBuffer){noiseBuffer=audioContext.createBuffer(1,audioContext.sampleRate,audioContext.sampleRate);const d=noiseBuffer.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;}
+    return audioContext;
+  }
+  function tone(freq,delay,duration,wave='sine',volume=.025,endFreq=freq){
+    const ctx=getAudio();if(!ctx)return;const t=ctx.currentTime+delay,o=ctx.createOscillator(),g=ctx.createGain();
+    o.type=wave;o.frequency.setValueAtTime(freq,t);o.frequency.exponentialRampToValueAtTime(Math.max(1,endFreq),t+duration);
+    g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(volume,t+.025);g.gain.exponentialRampToValueAtTime(.0001,t+duration);
+    o.connect(g);g.connect(ctx.destination);o.start(t);o.stop(t+duration+.03);
+  }
+  function purrSound(){
+    const ctx=getAudio();if(!ctx)return;const t=ctx.currentTime,s=ctx.createBufferSource(),f=ctx.createBiquadFilter(),g=ctx.createGain();
+    s.buffer=noiseBuffer;s.loop=true;f.type='lowpass';f.frequency.value=180;g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(.045,t+.12);
+    for(let n=.18;n<1.35;n+=.22){g.gain.setValueAtTime(.045,t+n);g.gain.linearRampToValueAtTime(.018,t+n+.09);g.gain.linearRampToValueAtTime(.045,t+n+.18);}
+    g.gain.linearRampToValueAtTime(.0001,t+1.55);s.connect(f);f.connect(g);g.connect(ctx.destination);s.start(t);s.stop(t+1.6);tone(42,0,1.45,'sine',.018,38);
+  }
+  function playSound(kind){
+    if(!getAudio())return;
+    if(kind==='pet'){purrSound();tone(520,.04,.18,'sine',.012,680);}
+    if(kind==='feed'){tone(680,0,.12,'triangle',.025,820);tone(920,.13,.18,'sine',.018,620);tone(380,.32,.12,'triangle',.012,300);}
+    if(kind==='play'){tone(520,0,.12,'triangle',.025,880);tone(740,.12,.14,'sine',.02,1040);tone(980,.26,.2,'sine',.018,620);}
+    if(kind==='sleep'){tone(440,0,.35,'sine',.018,330);tone(330,.28,.5,'sine',.014,220);purrSound();}
+    if(kind==='walk'){tone(125,0,.045,'sine',.009,95);tone(145,.11,.045,'sine',.008,105);}
+    if(kind==='arrive'){tone(620,0,.16,'sine',.02,820);tone(820,.15,.22,'sine',.018,980);}
+  }
+  const soundButton=$('sound-toggle');
+  soundButton?.addEventListener('click',()=>{soundEnabled=!soundEnabled;soundButton.textContent=soundEnabled?'🔊 Sound on':'🔇 Sound off';soundButton.setAttribute('aria-pressed',String(soundEnabled));if(soundEnabled)playSound('arrive');});
+
   const palettes = {
     black:{outline:'#17151d',body:'#292630',shade:'#201e27',light:'#514b5b',highlight:'#777080',ear:'#e88fa5',muzzle:'#f1d9d5',eye:'#f5d66f',shine:'#fff8dc',nose:'#e98da5'},
     white:{outline:'#a99d91',body:'#fff8ed',shade:'#e8ded1',light:'#ffffff',highlight:'#fffdf8',ear:'#efa0b2',muzzle:'#f3deda',eye:'#8fbd87',shine:'#ffffff',nose:'#df879e'}
@@ -114,20 +148,20 @@
   document.querySelectorAll('[data-action]').forEach(b=>b.addEventListener('click',()=>{
     pet.classList.remove('sleeping');
     switch(b.dataset.action){
-      case 'feed':state.hunger=Math.min(100,state.hunger+22);state.happiness=Math.min(100,state.happiness+4);message(state.name+' enjoyed a tasty snack!','HAPPY');react('🐟','fish');break;
-      case 'play':if(state.energy<15){message(state.name+' is too sleepy to play. Let them rest!','SLEEPY');break;}state.happiness=Math.min(100,state.happiness+18);state.energy=Math.max(0,state.energy-14);state.hunger=Math.max(0,state.hunger-7);message(state.name+' chased the yarn!','PLAYFUL');react('🧶','yarn');walkTo(25+Math.random()*50);break;
-      case 'pet':state.happiness=Math.min(100,state.happiness+10);message(state.name+' is purring.','LOVED');heart();react('♪','purr');break;
-      case 'sleep':state.energy=Math.min(100,state.energy+28);pet.classList.add('sleeping');message(state.name+' is having a cozy nap.','SLEEPY');react('Z z z','sleep');break;
+      case 'feed':state.hunger=Math.min(100,state.hunger+22);state.happiness=Math.min(100,state.happiness+4);message(state.name+' is excited for dinner!','HAPPY');react('🐟','fish');playSound('feed');pet.classList.add('excited');setTimeout(()=>pet.classList.remove('excited'),850);break;
+      case 'play':if(state.energy<15){message(state.name+' is too sleepy to play. Let them rest!','SLEEPY');break;}state.happiness=Math.min(100,state.happiness+18);state.energy=Math.max(0,state.energy-14);state.hunger=Math.max(0,state.hunger-7);message(state.name+' is chasing the yarn!','PLAYFUL');react('🧶','yarn');playSound('play');pet.classList.add('excited');setTimeout(()=>pet.classList.remove('excited'),900);walkTo(25+Math.random()*50);break;
+      case 'pet':state.happiness=Math.min(100,state.happiness+10);message(state.name+' is purring.','LOVED');heart();react('♪','purr');playSound('pet');pet.classList.add('purring');setTimeout(()=>pet.classList.remove('purring'),1600);break;
+      case 'sleep':state.energy=Math.min(100,state.energy+28);walkTo(72);pet.classList.add('sleeping');message(state.name+' curled up in her little bed.','SLEEPY');react('Z z z','sleep');playSound('sleep');break;
     }
     state.level=1+Math.floor((state.happiness+state.hunger+state.energy)/150);
     render();
   }));
   function moveTo(clientX){
     const rect=room.getBoundingClientRect();const pct=Math.max(12,Math.min(88,((clientX-rect.left)/rect.width)*100));
-    walkTo(pct);message(state.name+' came over to say hello!','CURIOUS');
+    walkTo(pct);message(state.name+' came over to say hello!','CURIOUS');playSound('arrive');
   }
   room.addEventListener('click',e=>{if(e.target.closest('button'))return;moveTo(e.clientX);});
-  pet.addEventListener('click',e=>{e.stopPropagation();state.happiness=Math.min(100,state.happiness+5);heart();react('♥','purr');message(state.name+' says meow!','LOVED');render();});
+  pet.addEventListener('click',e=>{e.stopPropagation();state.happiness=Math.min(100,state.happiness+5);heart();react('♥','purr');message(state.name+' says meow!','LOVED');playSound('pet');pet.classList.add('purring');setTimeout(()=>pet.classList.remove('purring'),1600);render();});
   pet.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();pet.click();}});
   pet.style.left=state.x+'%';render();
   // Gentle idle wandering keeps the pet feeling alive without draining needs.
