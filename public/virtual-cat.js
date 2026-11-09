@@ -7,6 +7,73 @@
   let state = {...defaults};
   try { state = {...defaults,...JSON.parse(localStorage.getItem(userKey) || '{}')}; } catch {}
   const $ = id => document.getElementById(id);
+  let bondState = null;
+  function bondTier(days) {
+    if (days >= 30) return 'Forever Family';
+    if (days >= 14) return 'Best Buddies';
+    if (days >= 7) return 'Little Companion';
+    if (days >= 3) return 'Familiar Face';
+    return 'New Friend';
+  }
+  function renderBond() {
+    if (!bondState) return;
+    const days = Number(bondState.current_bond) || 0;
+    $('bond-level').textContent = bondTier(days);
+    $('bond-count').textContent = days + (days === 1 ? ' day together' : ' days together');
+    $('bond-best').textContent = 'Best: ' + (Number(bondState.best_bond) || days) + ' days';
+    $('paw-saves-count').textContent = (Number(bondState.paw_saves) || 0) + ' / 3';
+    $('fish-coins-count').textContent = Number(bondState.fish_coins) || 0;
+    $('bond-meter-fill').style.width = Math.min(100, Math.max(4, days / 30 * 100)) + '%';
+    $('bond-greeting').textContent = bondState.greeting || 'Mochi is happy you are here! 💗';
+    $('bond-recovery-actions').hidden = !bondState.pending_recovery;
+    $('bond-restore-btn').disabled = Number(bondState.fish_coins) < 100;
+    $('bond-restore-btn').textContent = Number(bondState.fish_coins) < 100
+      ? '🐟 Need 100 Fish Coins'
+      : '💗 Restore for 100 coins';
+  }
+  async function loadBond() {
+    try {
+      bondState = await Meow.api('/api/virtual-cat/bond');
+      renderBond();
+      if (bondState.pending_recovery) message(bondState.greeting, 'WORRIED');
+      else if (bondState.first_visit || bondState.protected_days) {
+        message(bondState.greeting, 'HAPPY');
+        if (bondState.protected_days) heart();
+      }
+    } catch (err) {
+      $('bond-greeting').textContent = 'Mochi could not check your pawprints just now. ' + err.message;
+    }
+  }
+  $('bond-restore-btn').addEventListener('click', async () => {
+    if (!bondState?.pending_recovery) return;
+    if (Number(bondState.fish_coins) < 100) {
+      $('bond-greeting').textContent = 'You need 100 Fish Coins to bring your pawprints back. Play a game to earn more! 🐟';
+      return;
+    }
+    if (!window.confirm('Spend 100 Fish Coins to restore your Pawprint Bond?')) return;
+    const button = $('bond-restore-btn');
+    button.disabled = true;
+    try {
+      bondState = await Meow.api('/api/virtual-cat/bond/restore', { method: 'POST' });
+      renderBond(); message(bondState.greeting, 'LOVED'); heart(); playSound('arrive');
+    } catch (err) {
+      $('bond-greeting').textContent = err.message;
+      button.disabled = false;
+    }
+  });
+  $('bond-restart-btn').addEventListener('click', async () => {
+    if (!window.confirm('Start a new Pawprint Bond? Mochi, your cat level, accessories and all permanent progress will stay safe.')) return;
+    const button = $('bond-restart-btn');
+    button.disabled = true;
+    try {
+      bondState = await Meow.api('/api/virtual-cat/bond/start-fresh', { method: 'POST' });
+      renderBond(); message(bondState.greeting, 'CURIOUS');
+    } catch (err) {
+      $('bond-greeting').textContent = err.message;
+      button.disabled = false;
+    }
+  });
+
 
   const pet = $('pixel-pet'), room = $('pixel-room');
   let soundEnabled=true,audioContext=null,noiseBuffer=null,masterGain=null;
@@ -180,6 +247,7 @@
   pet.addEventListener('click',e=>{e.stopPropagation();state.happiness=Math.min(100,state.happiness+5);heart();react('♥','purr');message(state.name+' says meow!','LOVED');playSound('pet');pet.classList.add('purring');setTimeout(()=>pet.classList.remove('purring'),1600);render();});
   pet.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();pet.click();}});
   pet.style.left=state.x+'%';render();
+  loadBond();
   // Gentle idle wandering keeps the pet feeling alive without draining needs.
   let direction=1;
   setInterval(()=>{if(document.hidden||pet.classList.contains('sleeping')||pet.classList.contains('walking'))return;let x=parseFloat(pet.style.left)||50;if(x>82)direction=-1;if(x<18)direction=1;walkTo(x+direction*4);},4200);

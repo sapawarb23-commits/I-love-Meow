@@ -113,3 +113,28 @@
 .water-fountain span{position:absolute;left:0;right:0;bottom:1px;color:#fff;font-size:14px;}
 @keyframes butterfly-flit{0%,100%{transform:translate(0,0)}50%{transform:translate(5px,-7px)}}
 @media(max-width:440px){.fish-tank{width:60px;height:54px;font-size:21px}.scratching-post{height:76px;width:35px}.water-fountain{left:16%;}}
+
+
+/* Pawprint Bond — account-backed daily companion progress. */
+.bond-card{margin:18px 0 8px;padding:20px 22px;border:1px solid rgba(218,137,163,.28);background:linear-gradient(135deg,rgba(255,232,240,.72),rgba(255,255,255,.88));}
+.bond-topline,.bond-score-row,.bond-meta{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+.bond-topline{font-size:11px;font-weight:900;letter-spacing:.09em;color:#a65e79;}
+.bond-topline span:last-child{letter-spacing:0;background:#ffe1eb;border-radius:999px;padding:6px 10px;}
+.bond-greeting{font-size:17px;font-weight:800;margin:14px 0;color:#70445a;}
+.bond-score-row{margin:8px 0;font-size:13px;}
+.bond-score-row strong{font-size:19px;color:#a34d72;}
+.bond-score-row span,.bond-meta{font-size:12px;color:#826d78;}
+.bond-meter{height:10px;border-radius:20px;background:#f4dce5;overflow:hidden;margin:10px 0 14px;}
+.bond-meter i{display:block;height:100%;border-radius:20px;background:linear-gradient(90deg,#f5a9c3,#d96e9a);transition:width .35s ease;}
+.bond-meta{padding-top:4px;}
+.bond-meta b{color:#8d4f6a;}
+.bond-note{font-size:11px;color:#927e89;margin:13px 0 0;}
+.bond-recovery{margin-top:16px;padding:14px;border-radius:14px;background:rgba(255,221,231,.55);border:1px solid rgba(210,120,151,.25);}
+.bond-recovery p{font-size:13px;line-height:1.5;margin:0 0 12px;color:#71475a;}
+.bond-buttons{display:flex;gap:9px;flex-wrap:wrap;}
+.bond-buttons button{border:0;border-radius:11px;padding:10px 14px;font-weight:800;cursor:pointer;}
+.bond-restore{background:#d96e9a;color:#fff;}
+.bond-restart{background:rgba(255,255,255,.8);color:#82566a;border:1px solid #e7c3d1!important;}
+.bond-buttons button:disabled{opacity:.55;cursor:not-allowed;}
+@media(prefers-color-scheme:dark){html[data-theme="dark"] .bond-card{background:linear-gradient(135deg,rgba(77,44,61,.72),rgba(38,31,42,.9));}html[data-theme="dark"] .bond-greeting,html[data-theme="dark"] .bond-recovery p{color:#f5dce7;}}
+@media(max-width:520px){.bond-card{padding:16px}.bond-buttons button{width:100%;}}
