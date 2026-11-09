@@ -35,6 +35,7 @@
     try {
       bondState = await Meow.api('/api/virtual-cat/bond');
       renderBond();
+      speak('welcome', true);
       if (bondState.pending_recovery) { message(bondState.greeting, 'WORRIED'); speak('welcome', true); }
       else if (bondState.first_visit || bondState.protected_days) {
         speak('welcome', true);
