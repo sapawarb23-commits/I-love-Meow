@@ -90,6 +90,11 @@
     </form>
   </div>
 
+  <div class="section-title">Your Meows</div>
+  <div id="my-meows-list" style="display:grid; gap:14px;"></div>
+  <div id="my-meows-empty"></div>
+  <button type="button" class="btn btn-ghost btn-block" id="load-my-meows" style="display:none; margin-top:12px;">Load older Meows</button>
+
   <div class="section-title">Your cats</div>
   <div class="cat-grid" id="cat-grid"></div>
   <div id="cat-empty"></div>
@@ -99,6 +104,63 @@
 <script>
   if (!Meow.requireAuth()) { throw new Error('redirecting'); }
   Meow.renderNav('profile');
+
+  let oldestMyMeow = null;
+  let loadingMyMeows = false;
+
+  function myMeowCardHtml(m) {
+    return `
+      <article class="card lift meow-card" data-id="${Meow.escapeHtml(m.id)}" style="padding:16px;">
+        <div class="meow-head">
+          ${Meow.avatarHtml(Meow.user)}
+          <div>
+            <div class="meow-author">@${Meow.escapeHtml(Meow.user.username)}</div>
+            <div class="meow-meta">${Meow.timeAgo(m.created_at)}</div>
+          </div>
+        </div>
+        ${m.caption ? `<div class="meow-caption">${Meow.escapeHtml(m.caption)}</div>` : ''}
+        ${m.image_url ? `<img class="meow-image" src="${Meow.escapeHtml(m.image_url)}" alt="Your previous Meow" loading="lazy" tabindex="0" data-lightbox="${Meow.escapeHtml(m.image_url)}" onerror="this.style.display='none'">` : ''}
+      </article>
+    `;
+  }
+
+  async function loadMyMeows(initial = true) {
+    if (loadingMyMeows) return;
+    loadingMyMeows = true;
+    const button = document.getElementById('load-my-meows');
+    button.disabled = true;
+    try {
+      const params = new URLSearchParams({ author: Meow.user.id, limit: '20' });
+      if (oldestMyMeow) {
+        params.set('before', oldestMyMeow.created_at);
+        params.set('beforeId', oldestMyMeow.id);
+      }
+      const { feed: meows } = await Meow.api(`/api/feed?${params.toString()}`);
+      const list = document.getElementById('my-meows-list');
+      if (initial && !meows.length) {
+        document.getElementById('my-meows-empty').innerHTML = `
+          <div class="card empty-state">
+            <div class="emoji">🐾💌</div>
+            <h3 class="cute">Your Meows will live here</h3>
+            <p>Every post you share will be saved in this little archive.</p>
+            <a class="btn btn-primary" href="/feed.html">Share your first Meow</a>
+          </div>`;
+        button.style.display = 'none';
+        return;
+      }
+      document.getElementById('my-meows-empty').innerHTML = '';
+      meows.forEach(m => list.insertAdjacentHTML('beforeend', myMeowCardHtml(m)));
+      if (meows.length) oldestMyMeow = meows[meows.length - 1];
+      button.style.display = meows.length === 20 ? 'block' : 'none';
+    } catch (err) {
+      Meow.toast('Could not load your previous Meows: ' + err.message);
+    } finally {
+      loadingMyMeows = false;
+      button.disabled = false;
+    }
+  }
+
+  document.getElementById('load-my-meows').addEventListener('click', () => loadMyMeows(false));
 
   function renderUser() {
     document.getElementById('user-avatar').innerHTML = Meow.avatarHtml(Meow.user, { size: 82 });
@@ -249,6 +311,7 @@
   loadCats().catch(() => {
     document.getElementById('cat-empty').innerHTML = Meow.offlineCardHtml('Reload');
   });
+  loadMyMeows();
 </script>
 </body>
 </html>
