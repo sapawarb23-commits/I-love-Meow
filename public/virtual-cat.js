@@ -72,8 +72,10 @@
 
     // Separate little paws let the cat visibly step while walking.
     const legs=group('cat-legs');
-    block(7,21,4,2,p.outline,legs); block(13,21,4,2,p.outline,legs);
-    block(8,21,2,1,p.light,legs); block(14,21,2,1,p.light,legs);
+    const leftLeg=document.createElementNS(svgNS,'g');leftLeg.setAttribute('class','cat-leg-left');legs.appendChild(leftLeg);
+    const rightLeg=document.createElementNS(svgNS,'g');rightLeg.setAttribute('class','cat-leg-right');legs.appendChild(rightLeg);
+    block(7,21,4,2,p.outline,leftLeg); block(8,21,2,1,p.light,leftLeg);
+    block(13,21,4,2,p.outline,rightLeg); block(14,21,2,1,p.light,rightLeg);
     const lids=group('cat-eyelids');
     block(8,10,2,2,p.body,lids); block(14,10,2,2,p.body,lids);
   }
