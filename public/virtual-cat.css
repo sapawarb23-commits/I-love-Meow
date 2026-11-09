@@ -58,3 +58,24 @@
 .virtual-footnote{text-align:center;font-size:11px;opacity:.6;margin-top:17px}
 @media(max-width:760px){.virtual-layout{grid-template-columns:1fr}.pixel-room{height:360px}.virtual-page{padding-top:10px}.room-card{padding:10px}.pet-panel{grid-template-columns:1fr 1fr}.pet-profile{grid-column:1/-1}}
 @media(max-width:440px){.pet-panel{grid-template-columns:1fr}.pixel-room{height:320px}.room-topline{font-size:9px}.room-footer{font-size:10px}}
+
+
+/* Stage 1 + 2: visible paw steps, blinking, purring and playful reactions. */
+.pixel-pet { transition: left .55s linear, bottom .3s steps(3); }
+.pixel-pet.walking .cat-sprite { animation: walk-bounce .22s steps(2,end) infinite; }
+.pixel-pet.walking .cat-legs { animation: paw-steps .22s steps(2,end) infinite; transform-box:fill-box; transform-origin:center; }
+.pixel-pet.faces-left .cat-sprite { transform:scaleX(-1); }
+.pixel-pet.faces-left.walking .cat-sprite { animation: walk-bounce-left .22s steps(2,end) infinite; }
+.pixel-pet:not(.walking) .cat-legs { animation: idle-paws 3s steps(2,end) infinite; }
+.cat-eyelids { transform-box:fill-box; transform-origin:center; animation: kitty-blink 4.8s steps(1,end) infinite; }
+@keyframes walk-bounce { 0%,100%{translate:0 0} 50%{translate:0 -4px} }
+@keyframes walk-bounce-left { 0%,100%{translate:0 0;transform:scaleX(-1)} 50%{translate:0 -4px;transform:scaleX(-1)} }
+@keyframes paw-steps { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-2px)} }
+@keyframes idle-paws { 0%,90%,100%{transform:translateY(0)} 94%{transform:translateY(-1px)} }
+@keyframes kitty-blink { 0%,46%,49%,100%{transform:scaleY(0)} 47%,48%{transform:scaleY(1)} }
+.cat-reaction { position:absolute; z-index:8; left:50%; top:-8px; transform:translate(-50%,8px) scale(.7); opacity:0; pointer-events:none; font-size:27px; font-weight:900; text-shadow:2px 2px 0 rgba(255,255,255,.8); transition:opacity .16s,transform .16s; white-space:nowrap; }
+.cat-reaction.visible { opacity:1; transform:translate(-50%,-12px) scale(1); animation: reaction-float .95s ease-out; }
+.cat-reaction.purr { color:#e66f92; }
+.cat-reaction.fish,.cat-reaction.yarn { font-size:30px; }
+.cat-reaction.sleep { color:#7298c9; font-size:17px; letter-spacing:2px; }
+@keyframes reaction-float { 0%{translate:0 8px} 55%{translate:0 -10px} 100%{translate:0 -16px} }
