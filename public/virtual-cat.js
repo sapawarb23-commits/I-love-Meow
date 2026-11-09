@@ -1,6 +1,6 @@
 /* Virtual Cat MVP: local browser save, simple pixel movement and care actions. */
 (() => {
-  if (!window.Meow || !Meow.requireAuth()) return;
+  if (typeof Meow === 'undefined' || !Meow.requireAuth()) return;
   Meow.renderNav('virtual-cat');
   const userKey = 'ilm_virtual_cat_' + (Meow.user?.id || 'guest');
   const defaults = {name:'Mochi',cat:'black',accessory:'none',hunger:80,happiness:80,energy:80,level:1,x:50,mood:'CURIOUS'};
