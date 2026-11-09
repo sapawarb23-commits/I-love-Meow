@@ -17,16 +17,20 @@
 .room-rug{position:absolute;bottom:8%;left:22%;width:58%;height:19%;border-radius:50%;background:#d68d87;border:5px solid #b86e70;box-shadow:inset 0 0 0 5px #e8b3a0}
 .room-bowl{position:absolute;bottom:18%;left:8%;width:54px;height:25px;border-radius:4px 4px 14px 14px;background:#83b6c4;border:4px solid #547c89;color:#fff;text-align:center;font-weight:900}
 .toy-ball{position:absolute;bottom:18%;right:12%;width:25px;height:25px;border-radius:50%;background:#e9a34e;border:4px solid #a86e42;color:transparent}
-.pixel-pet{position:absolute;left:50%;bottom:20%;width:128px;height:150px;transform:translateX(-50%);z-index:3;cursor:pointer;transition:left .65s steps(8),bottom .4s steps(4);image-rendering:pixelated}
-.cat-sprite{position:absolute;left:0;top:0;width:128px;height:128px;overflow:visible;image-rendering:pixelated;filter:drop-shadow(3px 4px 0 rgba(55,43,40,.12))}
+.pixel-pet{position:absolute;left:50%;bottom:17%;width:176px;height:190px;transform:translateX(-50%);z-index:3;cursor:pointer;transition:left .65s steps(8),bottom .4s steps(4);image-rendering:pixelated}
+.cat-sprite{position:absolute;left:4px;top:0;width:168px;height:168px;overflow:visible;image-rendering:pixelated;filter:drop-shadow(3px 4px 0 rgba(55,43,40,.12))}
 .pet-shadow{position:absolute;bottom:12px;left:25px;width:78px;height:13px;background:rgba(73,55,46,.18);border-radius:50%;z-index:-1}
-.pixel-accessory{position:absolute;z-index:5;left:40px;top:1px;width:48px;height:20px;pointer-events:none}
-.pixel-accessory.cap:before{content:"";position:absolute;left:5px;top:3px;width:35px;height:12px;background:#e76f51;box-shadow:0 -5px 0 #e76f51,5px 5px 0 #bd5143,-7px 10px 0 #bd5143}
-.pixel-accessory.bow:before{content:"";position:absolute;left:14px;top:5px;width:10px;height:10px;background:#f18cae;box-shadow:-9px -5px 0 #f18cae,9px -5px 0 #f18cae,0 0 0 3px #b85c7b}
+.pixel-accessory{position:absolute;z-index:5;left:62px;top:5px;width:56px;height:25px;pointer-events:none}
+.pixel-accessory.cap:before{content:"";position:absolute;left:7px;top:5px;width:38px;height:12px;background:#e76f51;box-shadow:0 -6px 0 #e76f51,6px 5px 0 #bd5143,-8px 10px 0 #bd5143}
+.pixel-accessory.bow:before{content:"";position:absolute;left:23px;top:8px;width:10px;height:10px;background:#f18cae;box-shadow:-10px -5px 0 #f18cae,10px -5px 0 #f18cae,0 0 0 3px #b85c7b}
 .pet-heart{position:absolute;right:2px;top:4px;color:#e66f92;font-size:22px;opacity:0;transform:translateY(8px);transition:.2s}
 .pixel-pet.show-heart .pet-heart{opacity:1;transform:translateY(-10px)}
 .pixel-pet.sleeping{bottom:17%!important}
-.pixel-pet.sleeping .cat-sprite{transform:scaleY(.72) translateY(22px)}
+.pixel-pet.sleeping .cat-sprite{transform:scaleY(.78) translateY(18px)}
+.cat-tail{transform-origin:5px 20px;animation:tail-swish 1.8s steps(2,end) infinite}
+.pixel-pet:not(.sleeping) .cat-sprite{animation:kitty-bob 2.8s steps(2,end) infinite}
+@keyframes kitty-bob{0%,100%{translate:0 0}50%{translate:0 -3px}}
+@keyframes tail-swish{0%,100%{transform:translate(0,0)}50%{transform:translate(-1px,-1px)}}
 .room-hint{position:absolute;bottom:9px;left:0;right:0;text-align:center;font-size:11px;font-weight:700;color:#694f45;z-index:4}
 .room-footer{padding:12px 4px 2px;letter-spacing:0;font-size:11px}
 .room-footer span:last-child{font-weight:600;opacity:.7;text-align:right}
