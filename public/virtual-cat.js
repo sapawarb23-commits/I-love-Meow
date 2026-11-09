@@ -69,6 +69,13 @@
     [[4,14],[5,15],[18,14],[17,15]].forEach(([x,y])=>pixel(x,y,p.highlight));
     // A little forehead shine gives the face a soft, plush look.
     block(10,7,4,1,p.light);
+
+    // Separate little paws let the cat visibly step while walking.
+    const legs=group('cat-legs');
+    block(7,21,4,2,p.outline,legs); block(13,21,4,2,p.outline,legs);
+    block(8,21,2,1,p.light,legs); block(14,21,2,1,p.light,legs);
+    const lids=group('cat-eyelids');
+    block(8,10,2,2,p.body,lids); block(14,10,2,2,p.body,lids);
   }
   function save(){localStorage.setItem(userKey,JSON.stringify(state));}
   function render(){
@@ -84,29 +91,44 @@
   }
   function message(t,mood){$('action-message').textContent=t;if(mood){state.mood=mood;$('mood-label').textContent='MOOD: '+mood;}save();}
   function heart(){pet.classList.add('show-heart');setTimeout(()=>pet.classList.remove('show-heart'),850);}
+  let reactionTimer;
+  function react(symbol,kind=''){
+    const bubble=$('cat-reaction'); if(!bubble)return;
+    bubble.textContent=symbol; bubble.className='cat-reaction '+kind+' visible';
+    clearTimeout(reactionTimer); reactionTimer=setTimeout(()=>bubble.classList.remove('visible'),1100);
+  }
+  function walkTo(pct){
+    const old=parseFloat(pet.style.left)||state.x||50;
+    const next=Math.max(12,Math.min(88,pct));
+    pet.classList.toggle('faces-left',next<old);
+    pet.classList.add('walking'); pet.classList.remove('sleeping');
+    pet.style.left=next+'%'; state.x=next;
+    clearTimeout(pet.walkTimer); pet.walkTimer=setTimeout(()=>pet.classList.remove('walking'),720);
+    save();
+  }
   $('cat-name').addEventListener('input',e=>{state.name=e.target.value.slice(0,18);save();});
   document.querySelectorAll('.cat-choice').forEach(b=>b.addEventListener('click',()=>{state.cat=b.dataset.cat;render();message(state.name+' has a new look!','CURIOUS');}));
   document.querySelectorAll('.accessory-choice').forEach(b=>b.addEventListener('click',()=>{state.accessory=b.dataset.accessory;render();message('Looking stylish, '+state.name+'!','HAPPY');heart();}));
   document.querySelectorAll('[data-action]').forEach(b=>b.addEventListener('click',()=>{
     pet.classList.remove('sleeping');
     switch(b.dataset.action){
-      case 'feed':state.hunger=Math.min(100,state.hunger+22);state.happiness=Math.min(100,state.happiness+4);message(state.name+' enjoyed a tasty snack!','HAPPY');break;
-      case 'play':if(state.energy<15){message(state.name+' is too sleepy to play. Let them rest!','SLEEPY');break;}state.happiness=Math.min(100,state.happiness+18);state.energy=Math.max(0,state.energy-14);state.hunger=Math.max(0,state.hunger-7);message(state.name+' chased the yarn!','PLAYFUL');pet.style.left=(25+Math.random()*50)+'%';break;
-      case 'pet':state.happiness=Math.min(100,state.happiness+10);message(state.name+' is purring.','LOVED');heart();break;
-      case 'sleep':state.energy=Math.min(100,state.energy+28);pet.classList.add('sleeping');message(state.name+' is having a cozy nap.','SLEEPY');break;
+      case 'feed':state.hunger=Math.min(100,state.hunger+22);state.happiness=Math.min(100,state.happiness+4);message(state.name+' enjoyed a tasty snack!','HAPPY');react('🐟','fish');break;
+      case 'play':if(state.energy<15){message(state.name+' is too sleepy to play. Let them rest!','SLEEPY');break;}state.happiness=Math.min(100,state.happiness+18);state.energy=Math.max(0,state.energy-14);state.hunger=Math.max(0,state.hunger-7);message(state.name+' chased the yarn!','PLAYFUL');react('🧶','yarn');walkTo(25+Math.random()*50);break;
+      case 'pet':state.happiness=Math.min(100,state.happiness+10);message(state.name+' is purring.','LOVED');heart();react('♪','purr');break;
+      case 'sleep':state.energy=Math.min(100,state.energy+28);pet.classList.add('sleeping');message(state.name+' is having a cozy nap.','SLEEPY');react('Z z z','sleep');break;
     }
     state.level=1+Math.floor((state.happiness+state.hunger+state.energy)/150);
     render();
   }));
   function moveTo(clientX){
     const rect=room.getBoundingClientRect();const pct=Math.max(12,Math.min(88,((clientX-rect.left)/rect.width)*100));
-    state.x=pct;pet.style.left=pct+'%';pet.classList.remove('sleeping');message(state.name+' came over to say hello!','CURIOUS');save();
+    walkTo(pct);message(state.name+' came over to say hello!','CURIOUS');
   }
   room.addEventListener('click',e=>{if(e.target.closest('button'))return;moveTo(e.clientX);});
-  pet.addEventListener('click',e=>{e.stopPropagation();state.happiness=Math.min(100,state.happiness+5);heart();message(state.name+' says meow!','LOVED');render();});
+  pet.addEventListener('click',e=>{e.stopPropagation();state.happiness=Math.min(100,state.happiness+5);heart();react('♥','purr');message(state.name+' says meow!','LOVED');render();});
   pet.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();pet.click();}});
   pet.style.left=state.x+'%';render();
   // Gentle idle wandering keeps the pet feeling alive without draining needs.
   let direction=1;
-  setInterval(()=>{if(document.hidden||pet.classList.contains('sleeping'))return;let x=parseFloat(pet.style.left)||50;if(x>84)direction=-1;if(x<16)direction=1;pet.style.left=(x+direction*1.2)+'%';},1800);
+  setInterval(()=>{if(document.hidden||pet.classList.contains('sleeping')||pet.classList.contains('walking'))return;let x=parseFloat(pet.style.left)||50;if(x>82)direction=-1;if(x<18)direction=1;walkTo(x+direction*4);},4200);
 })();
