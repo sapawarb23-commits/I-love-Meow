@@ -9,26 +9,66 @@
   const $ = id => document.getElementById(id);
   const pet = $('pixel-pet'), room = $('pixel-room');
   const palettes = {
-    black:{body:'#25232b',shade:'#15141b',light:'#48434e',eye:'#f4d36c',nose:'#d98b9a'},
-    white:{body:'#f5eee1',shade:'#d6cbbb',light:'#fffaf0',eye:'#8cbd83',nose:'#d98b9a'}
+    black:{outline:'#17151d',body:'#292630',shade:'#201e27',light:'#514b5b',highlight:'#777080',ear:'#e88fa5',muzzle:'#f1d9d5',eye:'#f5d66f',shine:'#fff8dc',nose:'#e98da5'},
+    white:{outline:'#a99d91',body:'#fff8ed',shade:'#e8ded1',light:'#ffffff',highlight:'#fffdf8',ear:'#efa0b2',muzzle:'#f3deda',eye:'#8fbd87',shine:'#ffffff',nose:'#df879e'}
   };
-  const pixels = [
-    '0000003300000000','0000333333000000','0003333333300000','0033333333330000',
-    '0033333333330000','0333333333333000','0333333333333000','0333333333333000',
-    '0333333333333000','0333311331333000','0333311331333000','0033333333330000',
-    '0003333333300000','0000333333000000','0000330033000000','0003300003300000'
-  ];
+  const svgNS = 'http://www.w3.org/2000/svg';
   function drawCat(){
     const p=palettes[state.cat] || palettes.black;
-    const svg=$('cat-sprite'); svg.innerHTML='';
-    pixels.forEach((row,y)=>[...row].forEach((v,x)=>{
-      if(v==='0') return;
-      const fill=v==='1'?p.shade:v==='3'?p.body:v==='2'?p.light:v==='e'?p.eye:p.nose;
-      const r=document.createElementNS('http://www.w3.org/2000/svg','rect');
-      r.setAttribute('x',x);r.setAttribute('y',y);r.setAttribute('width','1');r.setAttribute('height','1');r.setAttribute('fill',fill);svg.appendChild(r);
-    }));
-    [[5,9],[10,9]].forEach(([x,y])=>{const r=document.createElementNS('http://www.w3.org/2000/svg','rect');r.setAttribute('x',x);r.setAttribute('y',y);r.setAttribute('width','1');r.setAttribute('height','1');r.setAttribute('fill',p.eye);svg.appendChild(r);});
-    const nose=document.createElementNS('http://www.w3.org/2000/svg','rect');nose.setAttribute('x','7');nose.setAttribute('y','11');nose.setAttribute('width','2');nose.setAttribute('height','1');nose.setAttribute('fill',p.nose);svg.appendChild(nose);
+    const svg=$('cat-sprite');
+    svg.innerHTML='';
+    const pixel=(x,y,color,parent=svg)=>{
+      const r=document.createElementNS(svgNS,'rect');
+      r.setAttribute('x',x);r.setAttribute('y',y);
+      r.setAttribute('width','1');r.setAttribute('height','1');
+      r.setAttribute('fill',color);parent.appendChild(r);
+    };
+    const block=(x,y,w,h,color,parent=svg)=>{
+      for(let yy=y;yy<y+h;yy++)for(let xx=x;xx<x+w;xx++)pixel(xx,yy,color,parent);
+    };
+    const group=className=>{
+      const g=document.createElementNS(svgNS,'g');g.setAttribute('class',className);svg.appendChild(g);return g;
+    };
+
+    // Curled tail sits behind the body.
+    const tail=group('cat-tail');
+    [[5,17],[4,18],[3,19],[3,20],[4,21],[5,21],[6,20],[6,19]].forEach(([x,y])=>pixel(x,y,p.outline,tail));
+    [[5,18],[4,19],[4,20],[5,20]].forEach(([x,y])=>pixel(x,y,p.body,tail));
+
+    // Pointed ears with soft pink inner pixels.
+    block(6,3,3,5,p.outline);block(15,3,3,5,p.outline);
+    block(7,4,1,3,p.ear);block(16,4,1,3,p.ear);
+    pixel(6,2,p.outline);pixel(8,2,p.outline);pixel(15,2,p.outline);pixel(17,2,p.outline);
+    pixel(7,3,p.outline);pixel(16,3,p.outline);
+
+    // Round, oversized kawaii head with a crisp pixel outline.
+    const headRows=[[5,8],[6,10],[7,12],[8,14],[9,16],[10,18],[11,18],[12,18],[13,18],[14,18],[15,16],[16,14],[17,10]];
+    headRows.forEach(([y,w])=>block((24-w)/2,y,w,1,p.outline));
+    const faceRows=[[6,6],[7,8],[8,10],[9,12],[10,14],[11,14],[12,14],[13,14],[14,14],[15,12],[16,10]];
+    faceRows.forEach(([y,w])=>block((24-w)/2,y,w,1,p.body));
+
+    // Plump little body and two visible paws.
+    const bodyRows=[[14,10],[15,14],[16,16],[17,16],[18,16],[19,16],[20,14],[21,12],[22,10]];
+    bodyRows.forEach(([y,w])=>block((24-w)/2,y,w,1,p.outline));
+    const bodyInner=[[15,10],[16,12],[17,14],[18,14],[19,14],[20,12],[21,10]];
+    bodyInner.forEach(([y,w])=>block((24-w)/2,y,w,1,p.body));
+    block(7,21,4,2,p.light);block(13,21,4,2,p.light);
+    block(8,22,3,1,p.highlight);block(13,22,3,1,p.highlight);
+
+    // Face: big sparkling eyes, rosy cheeks, tiny nose and smile.
+    block(7,10,3,3,p.outline);block(14,10,3,3,p.outline);
+    block(8,10,2,2,p.eye);block(14,10,2,2,p.eye);
+    pixel(8,10,p.shine);pixel(14,10,p.shine);
+    pixel(9,12,p.shade);pixel(15,12,p.shade);
+    block(5,13,2,1,p.ear);block(17,13,2,1,p.ear);
+    block(10,14,4,2,p.muzzle);
+    pixel(11,14,p.nose);pixel(12,14,p.nose);
+    pixel(11,16,p.outline);pixel(12,16,p.outline);
+    pixel(10,17,p.outline);pixel(13,17,p.outline);
+    // Tiny whiskers.
+    [[4,14],[5,15],[18,14],[17,15]].forEach(([x,y])=>pixel(x,y,p.highlight));
+    // A little forehead shine gives the face a soft, plush look.
+    block(10,7,4,1,p.light);
   }
   function save(){localStorage.setItem(userKey,JSON.stringify(state));}
   function render(){
