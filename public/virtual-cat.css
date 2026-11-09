@@ -61,9 +61,11 @@
 
 
 /* Stage 1 + 2: visible paw steps, blinking, purring and playful reactions. */
-.pixel-pet { transition: left .55s linear, bottom .3s steps(3); }
+.pixel-pet { transition: left .55s steps(5,end), bottom .3s steps(3); }
 .pixel-pet.walking .cat-sprite { animation: walk-bounce .22s steps(2,end) infinite; }
-.pixel-pet.walking .cat-legs { animation: paw-steps .22s steps(2,end) infinite; transform-box:fill-box; transform-origin:center; }
+.pixel-pet.walking .cat-legs { transform-box:fill-box; transform-origin:center; }
+.pixel-pet.walking .cat-leg-left { animation: left-paw-step .22s steps(2,end) infinite; }
+.pixel-pet.walking .cat-leg-right { animation: right-paw-step .22s steps(2,end) infinite; }
 .pixel-pet.faces-left .cat-sprite { transform:scaleX(-1); }
 .pixel-pet.faces-left.walking .cat-sprite { animation: walk-bounce-left .22s steps(2,end) infinite; }
 .pixel-pet:not(.walking) .cat-legs { animation: idle-paws 3s steps(2,end) infinite; }
@@ -79,3 +81,6 @@
 .cat-reaction.fish,.cat-reaction.yarn { font-size:30px; }
 .cat-reaction.sleep { color:#7298c9; font-size:17px; letter-spacing:2px; }
 @keyframes reaction-float { 0%{translate:0 8px} 55%{translate:0 -10px} 100%{translate:0 -16px} }
+
+@keyframes left-paw-step { 0%,100%{transform:translateY(-2px)} 50%{transform:translateY(1px)} }
+@keyframes right-paw-step { 0%,100%{transform:translateY(1px)} 50%{transform:translateY(-2px)} }
