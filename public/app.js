@@ -110,6 +110,7 @@ const Meow = {
             <a href="/explore.html" class="${activePage === 'explore' ? 'active' : ''}">Explore</a>
             <a href="/breeds.html" class="${activePage === 'breeds' ? 'active' : ''}">Breeds</a>
             <a href="/games.html" class="${activePage === 'games' ? 'active' : ''}">Games</a>
+            <a href="/virtual-cat.html" class="${activePage === 'virtual-cat' ? 'active' : ''}">Virtual Cat</a>
             <a href="/profile.html" class="${activePage === 'profile' ? 'active' : ''}">Profile</a>
             <button id="logout-btn">Log out</button>
             <a href="/profile.html" class="nav-avatar" title="Your profile">${avatar}</a>
@@ -137,6 +138,7 @@ const Meow = {
         <a href="/explore.html" class="${activePage === 'explore' ? 'active' : ''}">🧭</a>
         <a href="/breeds.html" class="${activePage === 'breeds' ? 'active' : ''}">📚</a>
         <a href="/games.html" class="${activePage === 'games' ? 'active' : ''}">🎮</a>
+        <a href="/virtual-cat.html" class="${activePage === 'virtual-cat' ? 'active' : ''}">🐈</a>
         <a href="/profile.html" class="${activePage === 'profile' ? 'active' : ''}">🐾</a>
         <a href="#" id="dock-logout">🚪</a>
       ` : `

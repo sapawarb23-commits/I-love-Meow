@@ -1,0 +1,115 @@
+/* Virtual Cat — pixel-art room */
+.virtual-page{max-width:1120px;padding-top:22px;padding-bottom:56px}
+.virtual-heading{text-align:center;margin:0 auto 22px;padding-top:4px}
+.virtual-kicker{font-size:11px;letter-spacing:3px;font-weight:800;color:#d97736}
+.virtual-heading h1{font-size:clamp(30px,5vw,46px);margin:3px 0}
+.virtual-heading>p:last-child{opacity:.7;font-size:14px}
+.virtual-layout{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(280px,.85fr);gap:18px;align-items:start}
+.room-card{padding:14px;overflow:hidden}
+.room-topline,.room-footer{display:flex;justify-content:space-between;gap:10px;align-items:center;font-size:10px;font-weight:800;letter-spacing:1.2px;padding:4px 4px 12px}
+.room-topline span:last-child{color:#b66a39}
+.pixel-room{height:440px;position:relative;overflow:hidden;border:4px solid #654b43;border-radius:8px;background:linear-gradient(#b9dce1 0 58%,#e8c99c 58% 100%);image-rendering:pixelated;cursor:crosshair;box-shadow:inset 0 0 0 4px rgba(255,255,255,.24)}
+.pixel-room:before{content:"";position:absolute;left:0;right:0;top:57%;height:8px;background:#b48b68;box-shadow:0 8px 0 #d4ad7e}
+.room-window{position:absolute;left:8%;top:9%;width:28%;height:30%;border:7px solid #fff0d8;background:#8fc5d5;display:flex;justify-content:space-around;align-items:center;color:#fff;font-size:22px;box-shadow:5px 5px 0 #8d6b58}
+.room-shelf{position:absolute;right:8%;top:23%;width:25%;height:9px;background:#95694e;box-shadow:0 6px 0 rgba(93,64,48,.2)}
+.room-shelf i{position:relative;display:inline-block;width:14px;height:17px;background:#e89b68;margin:0 8px;transform:translateY(-17px);border:2px solid #825744}
+.room-plant{position:absolute;right:10%;top:39%;font-size:36px;image-rendering:pixelated}
+.room-rug{position:absolute;bottom:8%;left:22%;width:58%;height:19%;border-radius:50%;background:#d68d87;border:5px solid #b86e70;box-shadow:inset 0 0 0 5px #e8b3a0}
+.room-bowl{position:absolute;bottom:18%;left:8%;width:54px;height:25px;border-radius:4px 4px 14px 14px;background:#83b6c4;border:4px solid #547c89;color:#fff;text-align:center;font-weight:900}
+.toy-ball{position:absolute;bottom:18%;right:12%;width:25px;height:25px;border-radius:50%;background:#e9a34e;border:4px solid #a86e42;color:transparent}
+.pixel-pet{position:absolute;left:50%;bottom:17%;width:176px;height:190px;transform:translateX(-50%);z-index:3;cursor:pointer;transition:left .65s steps(8),bottom .4s steps(4);image-rendering:pixelated}
+.cat-sprite{position:absolute;left:4px;top:0;width:168px;height:168px;overflow:visible;image-rendering:pixelated;filter:drop-shadow(3px 4px 0 rgba(55,43,40,.12))}
+.pet-shadow{position:absolute;bottom:12px;left:25px;width:78px;height:13px;background:rgba(73,55,46,.18);border-radius:50%;z-index:-1}
+.pixel-accessory{position:absolute;z-index:5;left:62px;top:5px;width:56px;height:25px;pointer-events:none}
+.pixel-accessory.cap:before{content:"";position:absolute;left:7px;top:5px;width:38px;height:12px;background:#e76f51;box-shadow:0 -6px 0 #e76f51,6px 5px 0 #bd5143,-8px 10px 0 #bd5143}
+.pixel-accessory.bow:before{content:"";position:absolute;left:23px;top:8px;width:10px;height:10px;background:#f18cae;box-shadow:-10px -5px 0 #f18cae,10px -5px 0 #f18cae,0 0 0 3px #b85c7b}
+.pet-heart{position:absolute;right:2px;top:4px;color:#e66f92;font-size:22px;opacity:0;transform:translateY(8px);transition:.2s}
+.pixel-pet.show-heart .pet-heart{opacity:1;transform:translateY(-10px)}
+.pixel-pet.sleeping{bottom:17%!important}
+.pixel-pet.sleeping .cat-sprite{transform:scaleY(.78) translateY(18px)}
+.cat-tail{transform-origin:5px 20px;animation:tail-swish 1.8s steps(2,end) infinite}
+.pixel-pet:not(.sleeping) .cat-sprite{animation:kitty-bob 2.8s steps(2,end) infinite}
+@keyframes kitty-bob{0%,100%{translate:0 0}50%{translate:0 -3px}}
+@keyframes tail-swish{0%,100%{transform:translate(0,0)}50%{transform:translate(-1px,-1px)}}
+.room-hint{position:absolute;bottom:9px;left:0;right:0;text-align:center;font-size:11px;font-weight:700;color:#694f45;z-index:4}
+.room-footer{padding:12px 4px 2px;letter-spacing:0;font-size:11px}
+.room-footer span:last-child{font-weight:600;opacity:.7;text-align:right}
+.pet-panel{display:grid;gap:14px}
+.pet-panel .card{padding:17px}
+.panel-label{font-size:10px;font-weight:900;letter-spacing:1.5px;color:#c57947;margin-bottom:12px}
+.pet-profile label,.choice-label{display:block;font-size:12px;font-weight:800;margin:10px 0 7px}
+#cat-name{width:100%;padding:11px 12px;border:2px solid rgba(120,90,70,.2);border-radius:9px;background:var(--gray);color:var(--dark);font:600 14px inherit;outline-offset:2px}
+.cat-choices{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.cat-choice{border:2px solid rgba(120,90,70,.18);background:transparent;border-radius:9px;padding:9px 5px;display:grid;justify-items:center;gap:3px;cursor:pointer;color:inherit;font:inherit}
+.cat-choice.selected,.accessory-choice.selected{border-color:#e68a4e;background:rgba(230,138,78,.1)}
+.choice-swatch{font-size:30px;line-height:1.3}
+.cat-choice span:nth-child(2){font-size:11px;font-weight:800}
+.cat-choice small{font-size:9px;font-weight:900;color:#548a61}
+.need-row{display:flex;justify-content:space-between;font-size:11px;margin:9px 0 5px;font-weight:700}
+.need-track{height:9px;background:rgba(120,90,70,.13);border-radius:20px;overflow:hidden}
+.need-track i{display:block;height:100%;background:#7ebd8a;border-radius:20px;transition:width .25s}
+#hunger-bar{background:#e6ad59}#energy-bar{background:#80a9d2}
+.care-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+.care-actions button,.accessory-choice{border:1px solid rgba(120,90,70,.18);background:rgba(180,145,115,.08);color:inherit;border-radius:8px;padding:10px 6px;font-size:12px;font-weight:800;cursor:pointer}
+.care-actions button:hover,.accessory-choice:hover{transform:translateY(-1px);border-color:#d88b57}
+.accessory-row{display:flex;gap:7px;flex-wrap:wrap}
+.accessory-choice{font-size:11px;padding:9px 11px}
+.closet-note{font-size:10px;opacity:.65;margin-top:10px;line-height:1.5}
+.virtual-footnote{text-align:center;font-size:11px;opacity:.6;margin-top:17px}
+@media(max-width:760px){.virtual-layout{grid-template-columns:1fr}.pixel-room{height:360px}.virtual-page{padding-top:10px}.room-card{padding:10px}.pet-panel{grid-template-columns:1fr 1fr}.pet-profile{grid-column:1/-1}}
+@media(max-width:440px){.pet-panel{grid-template-columns:1fr}.pixel-room{height:320px}.room-topline{font-size:9px}.room-footer{font-size:10px}}
+
+
+/* Stage 1 + 2: visible paw steps, blinking, purring and playful reactions. */
+.pixel-pet { transition: left .55s steps(5,end), bottom .3s steps(3); }
+.pixel-pet.walking .cat-sprite { animation: walk-bounce .22s steps(2,end) infinite; }
+.pixel-pet.walking .cat-legs { transform-box:fill-box; transform-origin:center; }
+.pixel-pet.walking .cat-leg-left { animation: left-paw-step .22s steps(2,end) infinite; }
+.pixel-pet.walking .cat-leg-right { animation: right-paw-step .22s steps(2,end) infinite; }
+.pixel-pet.faces-left .cat-sprite { transform:scaleX(-1); }
+.pixel-pet.faces-left.walking .cat-sprite { animation: walk-bounce-left .22s steps(2,end) infinite; }
+.pixel-pet:not(.walking) .cat-legs { animation: idle-paws 3s steps(2,end) infinite; }
+.cat-eyelids { transform-box:fill-box; transform-origin:center; animation: kitty-blink 4.8s steps(1,end) infinite; }
+@keyframes walk-bounce { 0%,100%{translate:0 0} 50%{translate:0 -4px} }
+@keyframes walk-bounce-left { 0%,100%{translate:0 0;transform:scaleX(-1)} 50%{translate:0 -4px;transform:scaleX(-1)} }
+@keyframes paw-steps { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-2px)} }
+@keyframes idle-paws { 0%,90%,100%{transform:translateY(0)} 94%{transform:translateY(-1px)} }
+@keyframes kitty-blink { 0%,46%,49%,100%{transform:scaleY(0)} 47%,48%{transform:scaleY(1)} }
+.cat-reaction { position:absolute; z-index:8; left:50%; top:-8px; transform:translate(-50%,8px) scale(.7); opacity:0; pointer-events:none; font-size:27px; font-weight:900; text-shadow:2px 2px 0 rgba(255,255,255,.8); transition:opacity .16s,transform .16s; white-space:nowrap; }
+.cat-reaction.visible { opacity:1; transform:translate(-50%,-12px) scale(1); animation: reaction-float .95s ease-out; }
+.cat-reaction.purr { color:#e66f92; }
+.cat-reaction.fish,.cat-reaction.yarn { font-size:30px; }
+.cat-reaction.sleep { color:#7298c9; font-size:17px; letter-spacing:2px; }
+@keyframes reaction-float { 0%{translate:0 8px} 55%{translate:0 -10px} 100%{translate:0 -16px} }
+
+@keyframes left-paw-step { 0%,100%{transform:translateY(-2px)} 50%{transform:translateY(1px)} }
+@keyframes right-paw-step { 0%,100%{transform:translateY(1px)} 50%{transform:translateY(-2px)} }
+
+/* Cozy bed, expressive movement and gentle generated sound reactions. */
+.pixel-pet{transition:left var(--walk-duration,650ms) steps(7,end),bottom .35s steps(3);}
+.pixel-pet.excited .cat-sprite{animation:excited-hop .18s steps(2,end) 4;}
+.pixel-pet.purring .cat-sprite{animation:happy-purr .18s steps(2,end) 8;}
+@keyframes excited-hop{0%,100%{translate:0 0}50%{translate:0 -8px}}
+@keyframes happy-purr{0%,100%{translate:0 0}50%{translate:0 2px}}
+.cat-bed{position:absolute;right:7%;bottom:13%;width:112px;height:54px;z-index:2;border:5px solid #b86e70;border-radius:18px 18px 12px 12px;background:#f2b6c1;box-shadow:inset 0 -8px 0 #df8f9f,4px 5px 0 rgba(90,60,50,.16);}
+.cat-bed:before{content:"";position:absolute;left:12px;right:12px;top:-13px;height:24px;border:4px solid #b86e70;border-radius:50%;background:#ffe0e4;}
+.cat-bed span{position:absolute;z-index:1;left:46%;top:9px;color:#d46e8a;font-size:19px;}
+.pixel-pet.sleeping{left:72%!important;bottom:18%!important;}
+.pixel-pet.sleeping .cat-sprite{transform:scaleY(.72) translateY(25px);}
+.sound-toggle{display:block;margin:10px 4px 0 auto;padding:7px 11px;border:1px solid rgba(120,90,70,.2);border-radius:20px;background:rgba(180,145,115,.1);color:inherit;font-size:11px;font-weight:800;cursor:pointer;}
+@media(max-width:440px){.cat-bed{width:84px;height:44px;right:4%;}}
+
+/* Extra interactive room objects: pixel-kawaii playroom details. */
+.room-object{position:absolute;z-index:2;border:0;background:transparent;padding:0;cursor:pointer;font-size:27px;line-height:1;filter:drop-shadow(2px 3px 0 rgba(80,55,45,.16));transition:transform .15s;}
+.room-object:hover{transform:translateY(-4px) scale(1.12);}
+.room-object:focus-visible{outline:3px dashed #b86e70;outline-offset:4px;border-radius:8px;}
+.scratching-post{left:3%;bottom:27%;font-size:24px;width:42px;height:94px;background:#d6a16e;border:4px solid #95694e;border-radius:8px 8px 3px 3px;display:flex;align-items:flex-start;justify-content:center;padding-top:5px;}
+.scratching-post span{position:absolute;left:4px;right:4px;bottom:8px;height:42px;background:repeating-linear-gradient(0deg,#f3d8ad 0 5px,#c58d5c 5px 9px);border:2px solid #95694e;}
+.fish-tank{right:7%;top:7%;width:76px;height:65px;border:5px solid #8babb5;border-radius:8px;background:linear-gradient(#bde7ec,#77b9c7);font-size:25px;}
+.fish-tank span{position:absolute;left:5px;right:5px;bottom:2px;color:#fff;font-size:15px;}
+.window-butterfly{left:35%;top:17%;font-size:21px;animation:butterfly-flit 2.4s ease-in-out infinite;}
+.yarn-toy{right:20%;bottom:17%;font-size:31px;}
+.water-fountain{left:17%;bottom:17%;font-size:30px;width:48px;height:43px;border-radius:12px 12px 15px 15px;background:#b8dce2;border:4px solid #739eaa;}
+.water-fountain span{position:absolute;left:0;right:0;bottom:1px;color:#fff;font-size:14px;}
+@keyframes butterfly-flit{0%,100%{transform:translate(0,0)}50%{transform:translate(5px,-7px)}}
+@media(max-width:440px){.fish-tank{width:60px;height:54px;font-size:21px}.scratching-post{height:76px;width:35px}.water-fountain{left:16%;}}
