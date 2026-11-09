@@ -33,7 +33,7 @@
   function save(){localStorage.setItem(userKey,JSON.stringify(state));}
   function render(){
     $('cat-name').value=state.name;
-    $('hunger-value').textContent=state.hunger+'%';$('happiness-value').textContent=state.happiness+'%';$('energy-value').textContent=state.energy+'%';
+    $('hunger-value').textContent=state.hunger+'%';$('happy-value').textContent=state.happiness+'%';$('energy-value').textContent=state.energy+'%';
     $('hunger-bar').style.width=state.hunger+'%';$('happy-bar').style.width=state.happiness+'%';$('energy-bar').style.width=state.energy+'%';
     $('mood-label').textContent='MOOD: '+state.mood;
     $('cat-level').textContent='Level '+state.level;
