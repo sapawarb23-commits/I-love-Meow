@@ -98,3 +98,18 @@
 .pixel-pet.sleeping .cat-sprite{transform:scaleY(.72) translateY(25px);}
 .sound-toggle{display:block;margin:10px 4px 0 auto;padding:7px 11px;border:1px solid rgba(120,90,70,.2);border-radius:20px;background:rgba(180,145,115,.1);color:inherit;font-size:11px;font-weight:800;cursor:pointer;}
 @media(max-width:440px){.cat-bed{width:84px;height:44px;right:4%;}}
+
+/* Extra interactive room objects: pixel-kawaii playroom details. */
+.room-object{position:absolute;z-index:2;border:0;background:transparent;padding:0;cursor:pointer;font-size:27px;line-height:1;filter:drop-shadow(2px 3px 0 rgba(80,55,45,.16));transition:transform .15s;}
+.room-object:hover{transform:translateY(-4px) scale(1.12);}
+.room-object:focus-visible{outline:3px dashed #b86e70;outline-offset:4px;border-radius:8px;}
+.scratching-post{left:3%;bottom:27%;font-size:24px;width:42px;height:94px;background:#d6a16e;border:4px solid #95694e;border-radius:8px 8px 3px 3px;display:flex;align-items:flex-start;justify-content:center;padding-top:5px;}
+.scratching-post span{position:absolute;left:4px;right:4px;bottom:8px;height:42px;background:repeating-linear-gradient(0deg,#f3d8ad 0 5px,#c58d5c 5px 9px);border:2px solid #95694e;}
+.fish-tank{right:7%;top:7%;width:76px;height:65px;border:5px solid #8babb5;border-radius:8px;background:linear-gradient(#bde7ec,#77b9c7);font-size:25px;}
+.fish-tank span{position:absolute;left:5px;right:5px;bottom:2px;color:#fff;font-size:15px;}
+.window-butterfly{left:35%;top:17%;font-size:21px;animation:butterfly-flit 2.4s ease-in-out infinite;}
+.yarn-toy{right:20%;bottom:17%;font-size:31px;}
+.water-fountain{left:17%;bottom:17%;font-size:30px;width:48px;height:43px;border-radius:12px 12px 15px 15px;background:#b8dce2;border:4px solid #739eaa;}
+.water-fountain span{position:absolute;left:0;right:0;bottom:1px;color:#fff;font-size:14px;}
+@keyframes butterfly-flit{0%,100%{transform:translate(0,0)}50%{transform:translate(5px,-7px)}}
+@media(max-width:440px){.fish-tank{width:60px;height:54px;font-size:21px}.scratching-post{height:76px;width:35px}.water-fountain{left:16%;}}
