@@ -176,6 +176,16 @@ CREATE TABLE IF NOT EXISTS daily_challenge_completions (
   completed_at TEXT DEFAULT (datetime('now')),
   PRIMARY KEY (user_id, challenge_date)
 );
+CREATE TABLE IF NOT EXISTS virtual_cat_bonds (
+  user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  current_bond INTEGER NOT NULL DEFAULT 0,
+  best_bond INTEGER NOT NULL DEFAULT 0,
+  paw_saves INTEGER NOT NULL DEFAULT 3,
+  last_visit_date TEXT DEFAULT NULL,
+  pending_recovery INTEGER NOT NULL DEFAULT 0,
+  updated_at TEXT DEFAULT (datetime('now'))
+);
+
 `;
 
 // ---- Promise wrappers around sqlite3's callback API ----

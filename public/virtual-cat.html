@@ -41,6 +41,7 @@
           <svg class="cat-sprite" id="cat-sprite" viewBox="0 0 24 24" shape-rendering="crispEdges" aria-hidden="true"></svg>
           <span class="pet-shadow"></span>
           <span class="pet-heart" id="pet-heart">♥</span>
+          <span class="pixel-speech" id="pixel-speech" role="status" aria-live="polite"></span>
           <span class="cat-reaction" id="cat-reaction" aria-hidden="true"></span>
         </div>
         <div class="room-hint" id="room-hint">Tap anywhere in the room to call your cat 🐾</div>
@@ -82,7 +83,26 @@
       </section>
     </aside>
   </section>
-  <p class="virtual-footnote">Your cat's progress is currently saved in this browser on this device. Account syncing is planned for a later update.</p>
+  
+  <section class="card bond-card" aria-live="polite">
+    <div class="bond-topline"><span>🐾 PAWPRINT BOND</span><span id="bond-level">New Friend</span></div>
+    <p class="bond-greeting" id="bond-greeting">Mochi is excited to meet you! 💗</p>
+    <div class="bond-score-row"><strong id="bond-count">1 day together</strong><span id="bond-best">Best: 1 day</span></div>
+    <div class="bond-meter"><i id="bond-meter-fill" style="width:3%"></i></div>
+    <div class="bond-meta">
+      <span>🐾 Paw Saves left <b id="paw-saves-count">3 / 3</b></span>
+      <span>🐟 Fish Coins <b id="fish-coins-count">—</b></span>
+    </div>
+    <div class="bond-recovery" id="bond-recovery-actions" hidden>
+      <p>Mochi is waiting. Restore your bond for <b>100 Fish Coins</b>, or begin a new pawprint journey. Your cat and all permanent progress stay safe.</p>
+      <div class="bond-buttons">
+        <button type="button" class="bond-restore" id="bond-restore-btn">💗 Restore for 100 coins</button>
+        <button type="button" class="bond-restart" id="bond-restart-btn">Start fresh</button>
+      </div>
+    </div>
+    <p class="bond-note">You get 3 free Paw Saves. After those are used, restoring a missed-day bond costs 100 Fish Coins.</p>
+  </section>
+  <p class="virtual-footnote">Your cat's care, looks and room are saved in this browser. Your Pawprint Bond is saved to your account.</p>
 </main>
 <script src="/app.js"></script>
 <script src="/virtual-cat.js"></script>

@@ -551,6 +551,119 @@ route('GET', '/api/search/trending', async (req, res) => {
   sendJson(res, 200, { trending: rows.map(r => r.query) });
 });
 
+
+/* ---- Virtual Cat: Pawprint Bond ----
+   Daily bond state is account-backed. Three free Paw Saves are consumed
+   automatically to cover missed calendar days; after those are exhausted,
+   a broken bond can be restored for 100 Fish Coins or restarted.
+*/
+function utcDayDiff(fromDate, toDate) {
+  const a = Date.parse(fromDate + 'T00:00:00Z');
+  const b = Date.parse(toDate + 'T00:00:00Z');
+  return Math.max(0, Math.round((b - a) / 86400000));
+}
+
+route('GET', '/api/virtual-cat/bond', async (req, res) => {
+  const user = await getAuthedUser(req);
+  if (!user) throw new ApiError(401, 'UNAUTHENTICATED', 'Not authenticated.');
+  const today = new Date().toISOString().slice(0, 10);
+  await run('INSERT OR IGNORE INTO virtual_cat_bonds (user_id) VALUES (?)', [user.id]);
+  let bond = await get('SELECT * FROM virtual_cat_bonds WHERE user_id = ?', [user.id]);
+
+  if (!bond.last_visit_date) {
+    await run(
+      `UPDATE virtual_cat_bonds SET current_bond = 1, best_bond = MAX(best_bond, 1),
+       last_visit_date = ?, updated_at = datetime('now') WHERE user_id = ?`,
+      [today, user.id]
+    );
+    bond = await get('SELECT * FROM virtual_cat_bonds WHERE user_id = ?', [user.id]);
+    return sendJson(res, 200, { ...bond, fish_coins: user.fish_coins, greeting: 'Yayyy! You\'re here! 💗', first_visit: true });
+  }
+
+  if (!bond.pending_recovery && bond.last_visit_date !== today) {
+    const daysAway = utcDayDiff(bond.last_visit_date, today);
+    if (daysAway === 1) {
+      await run(
+        `UPDATE virtual_cat_bonds SET current_bond = current_bond + 1,
+         best_bond = MAX(best_bond, current_bond + 1), last_visit_date = ?,
+         updated_at = datetime('now') WHERE user_id = ?`,
+        [today, user.id]
+      );
+    } else {
+      const missedDays = daysAway - 1;
+      if (bond.paw_saves >= missedDays) {
+        await run(
+          `UPDATE virtual_cat_bonds SET paw_saves = paw_saves - ?,
+           current_bond = current_bond + 1,
+           best_bond = MAX(best_bond, current_bond + 1),
+           last_visit_date = ?, updated_at = datetime('now') WHERE user_id = ?`,
+          [missedDays, today, user.id]
+        );
+        bond = await get('SELECT * FROM virtual_cat_bonds WHERE user_id = ?', [user.id]);
+        return sendJson(res, 200, { ...bond, fish_coins: user.fish_coins, protected_days: missedDays, greeting: 'I missed you... are you my hooman? 🥺' });
+      }
+      // Use up the remaining free Paw Saves when the missed days exceed
+      // the available allowance. The bond then waits for paid recovery.
+      await run(
+        `UPDATE virtual_cat_bonds SET paw_saves = 0, pending_recovery = 1,
+         updated_at = datetime('now') WHERE user_id = ?`,
+        [user.id]
+      );
+    }
+    bond = await get('SELECT * FROM virtual_cat_bonds WHERE user_id = ?', [user.id]);
+  }
+
+  sendJson(res, 200, {
+    ...bond,
+    fish_coins: user.fish_coins,
+    greeting: bond.pending_recovery
+      ? 'Mochi missed you! Save your bond so we can keep our pawprints together. 🥺'
+      : (bond.current_bond >= 30 ? 'You\'re my favourite human. Always. 💗' : 'WAIT! I REMEMBER YOU!! ❤️')
+  });
+});
+
+route('POST', '/api/virtual-cat/bond/restore', async (req, res) => {
+  const user = await getAuthedUser(req);
+  if (!user) throw new ApiError(401, 'UNAUTHENTICATED', 'Not authenticated.');
+  const today = new Date().toISOString().slice(0, 10);
+  const pending = await get('SELECT pending_recovery FROM virtual_cat_bonds WHERE user_id = ?', [user.id]);
+  if (!pending?.pending_recovery) throw new ApiError(409, 'NO_RECOVERY_NEEDED', 'Your pawprint bond is already safe.');
+  const debit = await run('UPDATE users SET fish_coins = fish_coins - 100 WHERE id = ? AND fish_coins >= 100', [user.id]);
+  if (!debit.changes) throw new ApiError(400, 'NOT_ENOUGH_FISH_COINS', 'You need 100 Fish Coins to restore your Pawprint Bond.');
+  const restored = await run(
+    `UPDATE virtual_cat_bonds SET pending_recovery = 0, last_visit_date = ?,
+     current_bond = current_bond + 1, best_bond = MAX(best_bond, current_bond + 1),
+     updated_at = datetime('now') WHERE user_id = ? AND pending_recovery = 1`,
+    [today, user.id]
+  );
+  if (!restored.changes) {
+    await run('UPDATE users SET fish_coins = fish_coins + 100 WHERE id = ?', [user.id]);
+    throw new ApiError(409, 'RECOVERY_ALREADY_HANDLED', 'Your bond was already handled. Refresh the page.');
+  }
+  const bond = await get('SELECT * FROM virtual_cat_bonds WHERE user_id = ?', [user.id]);
+  const updatedUser = await get('SELECT fish_coins FROM users WHERE id = ?', [user.id]);
+  sendJson(res, 200, { ...bond, fish_coins: updatedUser.fish_coins, greeting: 'WAIT! I REMEMBER YOU!! ❤️', restored: true });
+});
+
+route('POST', '/api/virtual-cat/bond/start-fresh', async (req, res) => {
+  const user = await getAuthedUser(req);
+  if (!user) throw new ApiError(401, 'UNAUTHENTICATED', 'Not authenticated.');
+  const today = new Date().toISOString().slice(0, 10);
+  await run(
+    `INSERT OR IGNORE INTO virtual_cat_bonds (user_id) VALUES (?)`,
+    [user.id]
+  );
+  await run(
+    `UPDATE virtual_cat_bonds SET current_bond = 1, best_bond = MAX(best_bond, 1),
+     last_visit_date = ?, pending_recovery = 0, updated_at = datetime('now')
+     WHERE user_id = ?`,
+    [today, user.id]
+  );
+  const bond = await get('SELECT * FROM virtual_cat_bonds WHERE user_id = ?', [user.id]);
+  const updatedUser = await get('SELECT fish_coins FROM users WHERE id = ?', [user.id]);
+  sendJson(res, 200, { ...bond, fish_coins: updatedUser.fish_coins, greeting: 'A fresh pawprint adventure starts today! 🐾', restarted: true });
+});
+
 // ---- Games ----
 
 route('POST', '/api/games/session', async (req, res) => {
