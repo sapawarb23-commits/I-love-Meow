@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Virtual Cat — I Love Meow</title>
+<meta name="description" content="Adopt your own pixel-art virtual cat. Feed, play, pet and explore together on I Love Meow.">
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/virtual-cat.css">
+<script>(function(){var t=localStorage.getItem("ilm_theme")||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",t);})();</script>
+</head>
+<body>
+<div class="bg-blobs" id="bg-blobs"></div>
+<div class="mobile-dock" id="mobile-dock"></div>
+<div class="nav-shell"><nav class="app-nav" id="app-nav"></nav></div>
+<main class="wrap virtual-page">
+  <header class="virtual-heading">
+    <p class="virtual-kicker">✦ YOUR LITTLE COMPANION ✦</p>
+    <h1 class="cute">Virtual Cat</h1>
+    <p>Adopt a tiny friend. Make memories, one pixel at a time.</p>
+  </header>
+  <section class="virtual-layout">
+    <div class="room-card card">
+      <div class="room-topline"><span>🏡 MY CAT'S ROOM</span><span id="mood-label">MOOD: CURIOUS</span></div>
+      <div class="pixel-room" id="pixel-room" aria-label="Your virtual cat's room. Tap a spot to move your cat.">
+        <div class="room-window"><span>✦</span><span>☁</span><span>✦</span></div>
+        <div class="room-shelf"><i></i><i></i><i></i></div>
+        <div class="room-plant">🌱</div>
+        <div class="room-rug"></div>
+        <div class="room-bowl">◡</div>
+        <div class="toy-ball">●</div>
+        <div class="pixel-pet" id="pixel-pet" role="button" tabindex="0" aria-label="Your cat. Tap to pet.">
+          <div class="pixel-accessory" id="pixel-accessory"></div>
+          <svg class="cat-sprite" id="cat-sprite" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true"></svg>
+          <span class="pet-shadow"></span>
+          <span class="pet-heart" id="pet-heart">♥</span>
+        </div>
+        <div class="room-hint" id="room-hint">Tap anywhere in the room to call your cat 🐾</div>
+      </div>
+      <div class="room-footer"><span>🐾 <b id="cat-level">Level 1</b></span><span id="action-message" aria-live="polite">Your new friend is waiting!</span></div>
+    </div>
+    <aside class="pet-panel">
+      <section class="card pet-profile">
+        <div class="panel-label">YOUR COMPANION</div>
+        <label for="cat-name">Cat's name</label>
+        <input id="cat-name" maxlength="18" placeholder="Give your cat a name">
+        <div class="choice-label">Choose your free cat</div>
+        <div class="cat-choices">
+          <button class="cat-choice selected" data-cat="black" type="button"><span class="choice-swatch black-swatch">🐈‍⬛</span><span>Black cat</span><small>FREE</small></button>
+          <button class="cat-choice" data-cat="white" type="button"><span class="choice-swatch white-swatch">🐈</span><span>White cat</span><small>FREE</small></button>
+        </div>
+      </section>
+      <section class="card needs-card">
+        <div class="panel-label">CAT CARE</div>
+        <div class="need-row"><span>🍗 Hunger</span><b id="hunger-value">80%</b></div><div class="need-track"><i id="hunger-bar" style="width:80%"></i></div>
+        <div class="need-row"><span>💗 Happiness</span><b id="happy-value">80%</b></div><div class="need-track"><i id="happy-bar" style="width:80%"></i></div>
+        <div class="need-row"><span>⚡ Energy</span><b id="energy-value">80%</b></div><div class="need-track"><i id="energy-bar" style="width:80%"></i></div>
+        <div class="care-actions">
+          <button type="button" data-action="feed">🐟 Feed</button>
+          <button type="button" data-action="play">🧶 Play</button>
+          <button type="button" data-action="pet">♡ Pet</button>
+          <button type="button" data-action="sleep">🌙 Sleep</button>
+        </div>
+      </section>
+      <section class="card closet-card">
+        <div class="panel-label">TINY CLOSET</div>
+        <div class="accessory-row">
+          <button type="button" class="accessory-choice selected" data-accessory="none">No hat</button>
+          <button type="button" class="accessory-choice" data-accessory="cap">🧢 Cap</button>
+          <button type="button" class="accessory-choice" data-accessory="bow">🎀 Bow</button>
+        </div>
+        <p class="closet-note">More pixel outfits and cat breeds are coming soon!</p>
+      </section>
+    </aside>
+  </section>
+  <p class="virtual-footnote">Your cat's progress is currently saved in this browser on this device. Account syncing is planned for a later update.</p>
+</main>
+<script src="/app.js"></script>
+<script src="/virtual-cat.js"></script>
+</body>
+</html>
