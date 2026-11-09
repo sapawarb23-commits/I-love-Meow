@@ -84,3 +84,17 @@
 
 @keyframes left-paw-step { 0%,100%{transform:translateY(-2px)} 50%{transform:translateY(1px)} }
 @keyframes right-paw-step { 0%,100%{transform:translateY(1px)} 50%{transform:translateY(-2px)} }
+
+/* Cozy bed, expressive movement and gentle generated sound reactions. */
+.pixel-pet{transition:left var(--walk-duration,650ms) steps(7,end),bottom .35s steps(3);}
+.pixel-pet.excited .cat-sprite{animation:excited-hop .18s steps(2,end) 4;}
+.pixel-pet.purring .cat-sprite{animation:happy-purr .18s steps(2,end) 8;}
+@keyframes excited-hop{0%,100%{translate:0 0}50%{translate:0 -8px}}
+@keyframes happy-purr{0%,100%{translate:0 0}50%{translate:0 2px}}
+.cat-bed{position:absolute;right:7%;bottom:13%;width:112px;height:54px;z-index:2;border:5px solid #b86e70;border-radius:18px 18px 12px 12px;background:#f2b6c1;box-shadow:inset 0 -8px 0 #df8f9f,4px 5px 0 rgba(90,60,50,.16);}
+.cat-bed:before{content:"";position:absolute;left:12px;right:12px;top:-13px;height:24px;border:4px solid #b86e70;border-radius:50%;background:#ffe0e4;}
+.cat-bed span{position:absolute;z-index:1;left:46%;top:9px;color:#d46e8a;font-size:19px;}
+.pixel-pet.sleeping{left:72%!important;bottom:18%!important;}
+.pixel-pet.sleeping .cat-sprite{transform:scaleY(.72) translateY(25px);}
+.sound-toggle{display:block;margin:10px 4px 0 auto;padding:7px 11px;border:1px solid rgba(120,90,70,.2);border-radius:20px;background:rgba(180,145,115,.1);color:inherit;font-size:11px;font-weight:800;cursor:pointer;}
+@media(max-width:440px){.cat-bed{width:84px;height:44px;right:4%;}}
