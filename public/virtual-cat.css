@@ -138,3 +138,9 @@
 .bond-buttons button:disabled{opacity:.55;cursor:not-allowed;}
 @media(prefers-color-scheme:dark){html[data-theme="dark"] .bond-card{background:linear-gradient(135deg,rgba(77,44,61,.72),rgba(38,31,42,.9));}html[data-theme="dark"] .bond-greeting,html[data-theme="dark"] .bond-recovery p{color:#f5dce7;}}
 @media(max-width:520px){.bond-card{padding:16px}.bond-buttons button{width:100%;}}
+
+/* Occasional pixel speech bubble above Mochi — brief, playful and never constant. */
+.pixel-speech{position:absolute;z-index:12;left:50%;top:-37px;transform:translate(-50%,7px) scale(.88);max-width:190px;width:max-content;padding:7px 9px;background:#fff8ec;color:#634454;border:3px solid #76545b;border-radius:3px;box-shadow:3px 3px 0 rgba(65,45,49,.2);font-family:ui-monospace,monospace;font-size:10px;font-weight:900;line-height:1.35;text-align:center;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .14s steps(2),transform .14s steps(2);image-rendering:pixelated;}
+.pixel-speech:after{content:"";position:absolute;left:calc(50% - 5px);bottom:-8px;width:8px;height:8px;background:#fff8ec;border-right:3px solid #76545b;border-bottom:3px solid #76545b;transform:rotate(45deg);}
+.pixel-speech.show{opacity:1;visibility:visible;transform:translate(-50%,0) scale(1);}
+@media(max-width:520px){.pixel-speech{font-size:9px;max-width:155px;top:-34px;padding:6px 7px;}}

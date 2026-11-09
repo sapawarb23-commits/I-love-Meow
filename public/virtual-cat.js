@@ -35,8 +35,9 @@
     try {
       bondState = await Meow.api('/api/virtual-cat/bond');
       renderBond();
-      if (bondState.pending_recovery) message(bondState.greeting, 'WORRIED');
+      if (bondState.pending_recovery) { message(bondState.greeting, 'WORRIED'); speak('welcome', true); }
       else if (bondState.first_visit || bondState.protected_days) {
+        speak('welcome', true);
         message(bondState.greeting, 'HAPPY');
         if (bondState.protected_days) heart();
       }
@@ -55,7 +56,7 @@
     button.disabled = true;
     try {
       bondState = await Meow.api('/api/virtual-cat/bond/restore', { method: 'POST' });
-      renderBond(); message(bondState.greeting, 'LOVED'); heart(); playSound('arrive');
+      renderBond(); message(bondState.greeting, 'LOVED'); heart(); speak('welcome', true); playSound('arrive');
     } catch (err) {
       $('bond-greeting').textContent = err.message;
       button.disabled = false;
@@ -198,6 +199,33 @@
   }
   function message(t,mood){$('action-message').textContent=t;if(mood){state.mood=mood;$('mood-label').textContent='MOOD: '+mood;}save();}
   function heart(){pet.classList.add('show-heart');setTimeout(()=>pet.classList.remove('show-heart'),850);}
+
+  const speechLines = {
+    welcome:['YAYYY! YOU\'RE BACK!! 💗','MY HOOMAN!! 🥺','I SAVED YOU A PURR!','BEST DAY EVER!!'],
+    feed:['NOM NOM NOM! 🐟','TASTY TASTY!','MY FAVOURITE!','ONE MORE BITE? 🥺'],
+    play:['CATCH ME IF YOU CAN!','WHEEEEE!!','THAT WAS SO FUN!','AGAIN AGAIN!!'],
+    pet:['hehe... more pets pls','PURRRR... 💗','THAT\'S THE SPOT!','I LOVE THIS!'],
+    sleep:['five more minutes... zZ','tiny nap time...','don\'t let the bugs bite 🌙'],
+    room:['I FOUND A THING!','LOOK WHAT I CAN DO!','DID YOU SEE THAT?!','teehee 🐾'],
+    idle:['psst... i love you 🥺','are you looking at me?','mrrp?','you smell like snacks','i am very smol','boop my nose!']
+  };
+  let speechTimer = null, lastSpeech = '', lastIdleSpeech = 0;
+  function speak(kind='idle',force=false) {
+    const bubble=$('pixel-speech');
+    if(!bubble)return;
+    if(!force && Math.random() > (kind==='idle' ? .34 : .58))return;
+    const choices=speechLines[kind]||speechLines.idle;
+    let line=choices[Math.floor(Math.random()*choices.length)];
+    if(choices.length>1 && line===lastSpeech) line=choices[(choices.indexOf(line)+1+Math.floor(Math.random()*(choices.length-1)))%choices.length];
+    lastSpeech=line;
+    bubble.textContent=line;
+    bubble.classList.remove('show');
+    void bubble.offsetWidth;
+    bubble.classList.add('show');
+    clearTimeout(speechTimer);
+    speechTimer=setTimeout(()=>bubble.classList.remove('show'),2500);
+  }
+
   let reactionTimer;
   function react(symbol,kind=''){
     const bubble=$('cat-reaction'); if(!bubble)return;
@@ -219,10 +247,10 @@
   document.querySelectorAll('[data-action]').forEach(b=>b.addEventListener('click',()=>{
     pet.classList.remove('sleeping');
     switch(b.dataset.action){
-      case 'feed':state.hunger=Math.min(100,state.hunger+22);state.happiness=Math.min(100,state.happiness+4);message(state.name+' is excited for dinner!','HAPPY');react('🐟','fish');playSound('feed');pet.classList.add('excited');setTimeout(()=>pet.classList.remove('excited'),850);break;
-      case 'play':if(state.energy<15){message(state.name+' is too sleepy to play. Let them rest!','SLEEPY');break;}state.happiness=Math.min(100,state.happiness+18);state.energy=Math.max(0,state.energy-14);state.hunger=Math.max(0,state.hunger-7);message(state.name+' is chasing the yarn!','PLAYFUL');react('🧶','yarn');playSound('play');pet.classList.add('excited');setTimeout(()=>pet.classList.remove('excited'),900);walkTo(25+Math.random()*50);break;
-      case 'pet':state.happiness=Math.min(100,state.happiness+10);message(state.name+' is purring.','LOVED');heart();react('♪','purr');playSound('pet');pet.classList.add('purring');setTimeout(()=>pet.classList.remove('purring'),1600);break;
-      case 'sleep':state.energy=Math.min(100,state.energy+28);walkTo(84);pet.classList.add('sleeping');message(state.name+' curled up in her little bed.','SLEEPY');react('Z z z','sleep');playSound('sleep');break;
+      case 'feed':speak('feed');state.hunger=Math.min(100,state.hunger+22);state.happiness=Math.min(100,state.happiness+4);message(state.name+' is excited for dinner!','HAPPY');react('🐟','fish');playSound('feed');pet.classList.add('excited');setTimeout(()=>pet.classList.remove('excited'),850);break;
+      case 'play':if(state.energy<15){message(state.name+' is too sleepy to play. Let them rest!','SLEEPY');break;}speak('play');state.happiness=Math.min(100,state.happiness+18);state.energy=Math.max(0,state.energy-14);state.hunger=Math.max(0,state.hunger-7);message(state.name+' is chasing the yarn!','PLAYFUL');react('🧶','yarn');playSound('play');pet.classList.add('excited');setTimeout(()=>pet.classList.remove('excited'),900);walkTo(25+Math.random()*50);break;
+      case 'pet':speak('pet');state.happiness=Math.min(100,state.happiness+10);message(state.name+' is purring.','LOVED');heart();react('♪','purr');playSound('pet');pet.classList.add('purring');setTimeout(()=>pet.classList.remove('purring'),1600);break;
+      case 'sleep':speak('sleep');state.energy=Math.min(100,state.energy+28);walkTo(84);pet.classList.add('sleeping');message(state.name+' curled up in her little bed.','SLEEPY');react('Z z z','sleep');playSound('sleep');break;
     }
     state.level=1+Math.floor((state.happiness+state.hunger+state.energy)/150);
     render();
@@ -241,7 +269,7 @@
   room.querySelectorAll('[data-interact]').forEach(object=>object.addEventListener('click',e=>{
     e.stopPropagation();const item=roomInteractions[object.dataset.interact];if(!item)return;
     walkTo(item.x);state.happiness=Math.max(0,Math.min(100,state.happiness+item.happy));state.energy=Math.max(0,Math.min(100,state.energy+item.energy));
-    message(item.text,item.mood);react(item.emoji,object.dataset.interact);playSound(item.sound);heart();render();
+    message(item.text,item.mood);speak('room');react(item.emoji,object.dataset.interact);playSound(item.sound);heart();render();
   }));
   room.addEventListener('click',e=>{if(e.target.closest('button'))return;moveTo(e.clientX);});
   pet.addEventListener('click',e=>{e.stopPropagation();state.happiness=Math.min(100,state.happiness+5);heart();react('♥','purr');message(state.name+' says meow!','LOVED');playSound('pet');pet.classList.add('purring');setTimeout(()=>pet.classList.remove('purring'),1600);render();});
@@ -250,5 +278,11 @@
   loadBond();
   // Gentle idle wandering keeps the pet feeling alive without draining needs.
   let direction=1;
-  setInterval(()=>{if(document.hidden||pet.classList.contains('sleeping')||pet.classList.contains('walking'))return;let x=parseFloat(pet.style.left)||50;if(x>82)direction=-1;if(x<18)direction=1;walkTo(x+direction*4);},4200);
+  setInterval(()=>{
+    if(document.hidden || pet.classList.contains('sleeping') || pet.classList.contains('walking'))return;
+    let x=parseFloat(pet.style.left)||50;
+    if(x>82)direction=-1;if(x<18)direction=1;
+    walkTo(x+direction*4);
+    if(Date.now()-lastIdleSpeech>45000 && Math.random()<.22){speak('idle',true);lastIdleSpeech=Date.now();}
+  },4200);
 })();
