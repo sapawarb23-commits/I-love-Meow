@@ -438,4 +438,5 @@
   const plant=room.querySelector('.room-plant'); if(plant) plant.id='room-plant';
   renderMochiMemories();
   scheduleMischief();
-\n})();
+
+})();
