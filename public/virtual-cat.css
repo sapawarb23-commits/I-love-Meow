@@ -144,7 +144,8 @@
 .pixel-speech:after{content:"";position:absolute;left:calc(50% - 5px);bottom:-8px;width:8px;height:8px;background:#fff8ec;border-right:3px solid #76545b;border-bottom:3px solid #76545b;transform:rotate(45deg);}
 .pixel-speech.show{opacity:1;visibility:visible;transform:translate(-50%,0) scale(1);}
 @media(max-width:520px){.pixel-speech{font-size:9px;max-width:155px;top:-34px;padding:6px 7px;}}
-\n
+
+
 /* Mochi memories, mini-games and trick training */
 .mochi-play-lab{margin:22px 0 8px}
 .mochi-section-heading{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:0 2px 12px;color:#a65e79;font-size:12px;font-weight:900;letter-spacing:.08em}
