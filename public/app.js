@@ -106,12 +106,12 @@ const Meow = {
         <a href="/" class="brand"><span>🐾</span><span>I Love Meow</span></a>
         <div class="app-nav-links">
           ${loggedIn ? `
-            <a href="/feed.html" class="${activePage === 'feed' ? 'active' : ''}">Feed</a>
-            <a href="/explore.html" class="${activePage === 'explore' ? 'active' : ''}">Explore</a>
-            <a href="/breeds.html" class="${activePage === 'breeds' ? 'active' : ''}">Breeds</a>
-            <a href="/games.html" class="${activePage === 'games' ? 'active' : ''}">Games</a>
-            <a href="/virtual-cat.html" class="${activePage === 'virtual-cat' ? 'active' : ''}">Virtual Cat</a>
-            <a href="/profile.html" class="${activePage === 'profile' ? 'active' : ''}">Profile</a>
+            <a href="/feed.html" class="nav-link ${activePage === 'feed' ? 'active' : ''}"><span>🏡</span> Feed</a>
+            <a href="/explore.html" class="nav-link ${activePage === 'explore' ? 'active' : ''}"><span>🧭</span> Explore</a>
+            <a href="/breeds.html" class="nav-link ${activePage === 'breeds' ? 'active' : ''}"><span>🐈</span> Breeds</a>
+            <a href="/games.html" class="nav-link ${activePage === 'games' ? 'active' : ''}"><span>🎮</span> Games</a>
+            <a href="/virtual-cat.html" class="nav-link ${activePage === 'virtual-cat' ? 'active' : ''}"><span>💗</span> Mochi</a>
+            <a href="/profile.html" class="nav-link ${activePage === 'profile' ? 'active' : ''}"><span>🐾</span> Profile</a>
             <button id="logout-btn">Log out</button>
             <a href="/profile.html" class="nav-avatar" title="Your profile">${avatar}</a>
           ` : `
