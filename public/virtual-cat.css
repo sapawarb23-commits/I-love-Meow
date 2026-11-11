@@ -144,3 +144,36 @@
 .pixel-speech:after{content:"";position:absolute;left:calc(50% - 5px);bottom:-8px;width:8px;height:8px;background:#fff8ec;border-right:3px solid #76545b;border-bottom:3px solid #76545b;transform:rotate(45deg);}
 .pixel-speech.show{opacity:1;visibility:visible;transform:translate(-50%,0) scale(1);}
 @media(max-width:520px){.pixel-speech{font-size:9px;max-width:155px;top:-34px;padding:6px 7px;}}
+
+
+/* Mochi memories, mini-games and trick training */
+.mochi-play-lab{margin:22px 0 8px}
+.mochi-section-heading{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:0 2px 12px;color:#a65e79;font-size:12px;font-weight:900;letter-spacing:.08em}
+.mochi-section-heading small{font-size:10px;letter-spacing:0;font-weight:700;opacity:.65}
+.mochi-feature-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.mochi-feature-card{padding:17px!important;min-width:0}
+.mochi-feature-copy{font-size:12px;opacity:.72;margin:-3px 0 12px;line-height:1.5}
+.mochi-button-grid{display:flex;gap:7px;flex-wrap:wrap}
+.mochi-button-grid button{border:1px solid rgba(120,90,70,.2);background:rgba(230,138,174,.1);color:inherit;border-radius:9px;padding:9px 10px;font-size:11px;font-weight:800;cursor:pointer}
+.mochi-button-grid button:hover{transform:translateY(-2px);border-color:#dc8caf}
+.mochi-feature-status{font-size:11px;line-height:1.5;margin:11px 0 0;color:#a65e79;min-height:17px}
+.mochi-memory-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.mochi-memory-stats div{padding:9px 7px;border-radius:9px;background:rgba(230,138,174,.1);min-width:0}
+.mochi-memory-stats b,.mochi-memory-stats small{display:block}
+.mochi-memory-stats b{font-size:11px;overflow-wrap:anywhere}
+.mochi-memory-stats small{font-size:9px;opacity:.65;margin-top:4px}
+.mochi-diary-title{font-size:12px;font-weight:900;margin:13px 0 5px;color:#a65e79}
+.mochi-diary{padding-left:18px;margin:0;font-size:10px;line-height:1.7;opacity:.8}
+.mochi-diary li{padding:1px 0}
+.pixel-pet.mochi-hiding{opacity:.12;transform:translateX(-50%) scale(.55);filter:blur(1px)}
+.pixel-pet.mochi-trick-wave .cat-sprite{animation:mochi-wave .35s steps(2,end) 5}
+.pixel-pet.mochi-trick-dance .cat-sprite{animation:mochi-dance .28s steps(2,end) 8}
+.pixel-pet.mochi-trick-sit .cat-sprite{transform:scaleY(.85) translateY(8px)}
+.pixel-pet.mochi-trick-highfive .cat-sprite{animation:mochi-highfive .3s steps(2,end) 6}
+@keyframes mochi-wave{0%,100%{translate:0 0}50%{translate:3px -5px}}
+@keyframes mochi-dance{0%,100%{translate:0 0;rotate:-5deg}50%{translate:0 -8px;rotate:5deg}}
+@keyframes mochi-highfive{0%,100%{translate:0 0}50%{translate:0 -7px}}
+.dream-bubble{position:absolute;z-index:13;left:50%;top:-65px;transform:translateX(-50%);background:#fff8ec;border:2px solid #92738b;border-radius:12px;padding:5px 8px;color:#785b85;font-size:11px;white-space:nowrap;box-shadow:2px 2px 0 #d7bfd3;animation:dream-float 2.8s ease-in-out infinite;pointer-events:none}
+@keyframes dream-float{0%,100%{translate:0 0}50%{translate:0 -5px}}
+.room-plant.plant-tipped{transform:rotate(70deg) translate(7px,10px);transform-origin:bottom center;transition:transform .25s}
+@media(max-width:650px){.mochi-feature-grid{grid-template-columns:1fr}.mochi-section-heading{align-items:flex-start;flex-direction:column}.mochi-memory-stats{grid-template-columns:1fr 1fr}.mochi-memory-stats div:last-child{grid-column:1/-1}}

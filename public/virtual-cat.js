@@ -286,4 +286,157 @@
     walkTo(x+direction*4);
     if(Date.now()-lastIdleSpeech>45000 && Math.random()<.22){speak('idle',true);lastIdleSpeech=Date.now();}
   },4200);
+
+  // Mochi's memories and playful extras. These are saved alongside her existing
+  // browser save, so none of the earlier cat progress is reset.
+  state.activityCounts = state.activityCounts || {};
+  state.treatCounts = state.treatCounts || {};
+  state.tricks = Array.isArray(state.tricks) ? state.tricks : [];
+  state.diary = Array.isArray(state.diary) ? state.diary : [];
+  state.milestones = state.milestones || {};
+  state.playSessions = Number(state.playSessions) || 0;
+  state.lastPlayAt = state.lastPlayAt || '';
+  let hideSeekActive = false, butterflyGameActive = false, mischiefBusy = false;
+
+  function diaryNote(note) {
+    state.diary.unshift({note, at:new Date().toISOString()});
+    state.diary = state.diary.slice(0,8);
+    save(); renderMochiMemories();
+  }
+  function unlockMilestone(key, note) {
+    if (state.milestones[key]) return;
+    state.milestones[key] = true;
+    diaryNote('🏅 ' + note);
+    speak('room', true);
+  }
+  function rememberActivity(activity) {
+    state.activityCounts[activity] = (Number(state.activityCounts[activity]) || 0) + 1;
+    if (activity === 'play') {
+      state.playSessions++;
+      state.lastPlayAt = new Date().toISOString();
+      if (state.playSessions === 1) unlockMilestone('first_play','Your first play session together!');
+      if (state.playSessions === 5) unlockMilestone('five_plays','Five play sessions! Mochi loves playtime.');
+    }
+    if (activity === 'pet' && state.activityCounts.pet === 10) unlockMilestone('ten_pets','Ten lovely pets shared!');
+    save(); renderMochiMemories();
+  }
+  function favoriteFrom(counts, labels) {
+    const entries = Object.entries(counts || {}).filter(([,n]) => Number(n)>0).sort((a,b)=>b[1]-a[1]);
+    return entries.length ? (labels[entries[0][0]] || entries[0][0]) : 'Not yet decided';
+  }
+  function renderMochiMemories() {
+    $('favorite-activity').textContent = favoriteFrom(state.activityCounts,{feed:'Treat time',play:'Playing',pet:'Cuddles',sleep:'Naps',yarn:'Yarn play',butterfly:'Butterfly watching'});
+    $('favorite-treat').textContent = favoriteFrom(state.treatCounts,{fish:'Fish bites 🐟',berry:'Berry nibbles 🍓',cookie:'Paw cookies 🍪'});
+    $('last-play-session').textContent = state.lastPlayAt ? new Date(state.lastPlayAt).toLocaleString() : 'This is the first hello!';
+    $('tricks-learned').textContent = state.tricks.length;
+    const diary = $('mochi-diary'); diary.innerHTML = '';
+    if (!state.diary.length) { const li=document.createElement('li'); li.textContent='Mochi is waiting to make her first memory!'; diary.appendChild(li); }
+    state.diary.slice(0,5).forEach(entry=>{const li=document.createElement('li');li.textContent=entry.note;diary.appendChild(li);});
+  }
+  document.querySelectorAll('[data-action]').forEach(button=>button.addEventListener('click',()=>{
+    const action=button.dataset.action;
+    rememberActivity(action);
+    if(action==='play') diaryNote('🧶 You played together. '+state.name+' had the best time!');
+    if(action==='sleep') {
+      diaryNote('🌙 '+state.name+' curled up for a dreamy nap.');
+      let dream=$('mochi-dream');
+      if(!dream){dream=document.createElement('span');dream.id='mochi-dream';dream.className='dream-bubble';pet.appendChild(dream);}
+      const dreams=['🧶 yarn mountains','🐟 a fishy kingdom','🦋 butterfly clouds','💗 endless cuddles'];
+      dream.textContent='💭 '+dreams[Math.floor(Math.random()*dreams.length)];
+      setTimeout(()=>dream?.remove(),9000);
+    }
+  }));
+  room.querySelectorAll('[data-interact]').forEach(object=>object.addEventListener('click',()=>{
+    const key=object.dataset.interact;
+    if(key==='yarn'||key==='butterfly') rememberActivity(key);
+    if(key==='yarn') diaryNote('🧶 Mochi pounced on her favourite yarn!');
+  }));
+
+  document.querySelectorAll('[data-treat]').forEach(button=>button.addEventListener('click',()=>{
+    const treat=button.dataset.treat;
+    state.treatCounts[treat]=(Number(state.treatCounts[treat])||0)+1;
+    state.hunger=Math.min(100,state.hunger+({fish:13,berry:7,cookie:10}[treat]||8));
+    state.happiness=Math.min(100,state.happiness+8);
+    const messages={fish:'NOM! Fish is a classic favourite!',berry:'A berry boop! Sweet and juicy!',cookie:'CRONCH! Paw cookies are delicious!'};
+    $('treat-status').textContent=messages[treat];
+    message(state.name+' enjoyed a little treat!','HAPPY');react('♥','fish');playSound('feed');heart();
+    if(Object.values(state.treatCounts).reduce((a,b)=>a+b,0)===1) unlockMilestone('first_treat','You shared your first special treat!');
+    save();render();renderMochiMemories();
+  }));
+
+  document.querySelectorAll('[data-trick]').forEach(button=>button.addEventListener('click',()=>{
+    const trick=button.dataset.trick, labels={wave:'wave hello',dance:'dance',sit:'sit pretty',highfive:'give a high-five'};
+    if(!state.tricks.includes(trick)) state.tricks.push(trick);
+    pet.classList.remove('mochi-trick-wave','mochi-trick-dance','mochi-trick-sit','mochi-trick-highfive');
+    pet.classList.add('mochi-trick-'+trick);
+    $('trick-status').textContent=state.name+' learned to '+labels[trick]+'! ✨';
+    message(state.name+' learned a new trick!','PROUD');speak('room',true);react('✨','purr');playSound('play');
+    diaryNote('✨ Mochi learned to '+labels[trick]+'!');
+    if(state.tricks.length===4) unlockMilestone('all_tricks','Mochi learned all four tricks!');
+    save();renderMochiMemories();
+    setTimeout(()=>pet.classList.remove('mochi-trick-'+trick),2600);
+  }));
+
+  $('hide-seek-btn').addEventListener('click',()=>{
+    if(hideSeekActive)return;
+    hideSeekActive=true;pet.classList.add('mochi-hiding');
+    $('game-status').textContent='🙈 Mochi is hiding! Tap somewhere in the room to find her!';
+    speak('room',true);diaryNote('🙈 Mochi played hide and seek!');
+    setTimeout(()=>{if(hideSeekActive){hideSeekActive=false;pet.classList.remove('mochi-hiding');$('game-status').textContent='Mochi peeked out! She was hiding behind the furniture.';}},18000);
+  });
+  room.addEventListener('click',e=>{
+    if(!hideSeekActive || e.target.closest('button'))return;
+    hideSeekActive=false;pet.classList.remove('mochi-hiding');
+    state.happiness=Math.min(100,state.happiness+8);message('YOU FOUND MOCHI!! Best seeker ever! 💗','EXCITED');
+    $('game-status').textContent='🎉 You found her! +8 happiness';react('💗','purr');playSound('arrive');heart();render();
+    unlockMilestone('first_hide_seek','You found Mochi in your first hide-and-seek game!');
+  });
+  $('butterfly-game-btn').addEventListener('click',()=>{
+    butterflyGameActive=true;
+    const butterfly=room.querySelector('[data-interact="butterfly"]');
+    butterfly.style.left=(15+Math.random()*65)+'%';butterfly.style.top=(12+Math.random()*34)+'%';
+    $('game-status').textContent='🦋 Catch the fluttering butterfly! Tap the butterfly in the room!';
+    speak('play',true);
+  });
+  room.querySelector('[data-interact="butterfly"]').addEventListener('click',()=>{
+    if(!butterflyGameActive)return;
+    butterflyGameActive=false;state.happiness=Math.min(100,state.happiness+10);
+    $('game-status').textContent='🦋 Caught it! Mochi is delighted (+10 happiness).';
+    diaryNote('🦋 You caught a butterfly together!');message('Mochi did a tiny happy hop!','EXCITED');react('🦋','yarn');playSound('play');render();
+    unlockMilestone('first_butterfly','You caught your first butterfly together!');
+  });
+
+  $('photo-mode-btn').addEventListener('click',()=>{
+    const svg=$('cat-sprite').cloneNode(true);
+    svg.setAttribute('x','36');svg.setAttribute('y','30');svg.setAttribute('width','168');svg.setAttribute('height','168');
+    const accessory=state.accessory==='bow'?'🎀':state.accessory==='cap'?'🧢':'';
+    const art='<svg xmlns="http://www.w3.org/2000/svg" width="240" height="270" viewBox="0 0 240 270"><rect width="240" height="270" rx="18" fill="#fff0f5"/><rect x="10" y="10" width="220" height="250" rx="12" fill="#fffaf0" stroke="#d88caf" stroke-width="4"/><text x="120" y="27" text-anchor="middle" font-size="13" fill="#9d5577">MOCHI MOMENT</text>'+svg.outerHTML+'<text x="120" y="224" text-anchor="middle" font-size="18" fill="#70445a">'+String(state.name).replace(/[&<>"]/g,'')+'</text><text x="120" y="246" text-anchor="middle" font-size="12" fill="#b66a89">'+accessory+'  ♡ captured with love ♡</text></svg>';
+    const blob=new Blob([art],{type:'image/svg+xml'}),url=URL.createObjectURL(blob),a=document.createElement('a');
+    a.href=url;a.download='mochi-memory.svg';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);
+    $('game-status').textContent='📸 A little Mochi snapshot has been saved!';
+    diaryNote('📸 You took a picture of '+state.name+'!');
+    unlockMilestone('first_photo','You captured your first Mochi photo!');
+  });
+
+  function scheduleMischief(){
+    setTimeout(()=>{
+      if(!document.hidden && !mischiefBusy && !pet.classList.contains('sleeping') && Math.random()<.72){
+        mischiefBusy=true;
+        const moments=[
+          {text:'WHOOPS! Mochi tipped the little plant over! 🌱',line:'I DID NOT DO THAT. 🙀',action:()=>{$('room-plant').classList.add('plant-tipped');}},
+          {text:'Mochi is hiding behind the furniture... peekaboo!',line:'you cannot see me hehe',action:()=>{pet.classList.add('mochi-hiding');setTimeout(()=>pet.classList.remove('mochi-hiding'),5000);}},
+          {text:'Mochi dashed after a butterfly! 🦋',line:'COME BACK, FLUTTER FRIEND!',action:()=>{walkTo(18+Math.random()*60);}},
+          {text:'Mochi is pretending to be asleep. Shhh... 😴',line:'zZ... definitely awake...',action:()=>{pet.classList.add('sleeping');setTimeout(()=>pet.classList.remove('sleeping'),4500);}}
+        ];
+        const moment=moments[Math.floor(Math.random()*moments.length)];
+        moment.action();message(moment.text,'MISCHIEVOUS');speak('room',true);diaryNote('😼 '+moment.text);
+        setTimeout(()=>{ $('room-plant').classList.remove('plant-tipped');mischiefBusy=false; },5500);
+      }
+      scheduleMischief();
+    },90000+Math.random()*90000);
+  }
+  const plant=room.querySelector('.room-plant'); if(plant) plant.id='room-plant';
+  renderMochiMemories();
+  scheduleMischief();
+
 })();

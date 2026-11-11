@@ -84,6 +84,54 @@
     </aside>
   </section>
   
+
+  <section class="mochi-play-lab">
+    <div class="mochi-section-heading"><span>🎀 MOCHI'S LITTLE WORLD</span><small>tiny moments, big memories</small></div>
+    <div class="mochi-feature-grid">
+      <article class="card mochi-feature-card">
+        <div class="panel-label">🎮 PLAY TOGETHER</div>
+        <p class="mochi-feature-copy">Mochi has a few games up her tiny paws.</p>
+        <div class="mochi-button-grid">
+          <button type="button" id="hide-seek-btn">🙈 Hide & seek</button>
+          <button type="button" id="butterfly-game-btn">🦋 Catch the butterfly</button>
+          <button type="button" id="photo-mode-btn">📸 Photo mode</button>
+        </div>
+        <p class="mochi-feature-status" id="game-status" aria-live="polite">Pick a game. Mochi is ready!</p>
+      </article>
+      <article class="card mochi-feature-card">
+        <div class="panel-label">🍓 TREAT TIME</div>
+        <p class="mochi-feature-copy">Discover which little snack Mochi loves most.</p>
+        <div class="mochi-button-grid">
+          <button type="button" data-treat="fish">🐟 Fish bite</button>
+          <button type="button" data-treat="berry">🍓 Berry nibble</button>
+          <button type="button" data-treat="cookie">🍪 Paw cookie</button>
+        </div>
+        <p class="mochi-feature-status" id="treat-status" aria-live="polite">Her favourite treat will be remembered!</p>
+      </article>
+      <article class="card mochi-feature-card">
+        <div class="panel-label">✨ TRICK TRAINING</div>
+        <p class="mochi-feature-copy">Teach Mochi a new trick. Practice makes purr-fect!</p>
+        <div class="mochi-button-grid">
+          <button type="button" data-trick="wave">👋 Wave</button>
+          <button type="button" data-trick="dance">💃 Dance</button>
+          <button type="button" data-trick="sit">🐾 Sit</button>
+          <button type="button" data-trick="highfive">🖐️ High-five</button>
+        </div>
+        <p class="mochi-feature-status" id="trick-status">Tricks learned: <b id="tricks-learned">0</b> / 4</p>
+      </article>
+      <article class="card mochi-feature-card mochi-memory-card">
+        <div class="panel-label">📖 MOCHI REMEMBERS</div>
+        <div class="mochi-memory-stats">
+          <div><b id="favorite-activity">Not yet decided</b><small>Favourite activity</small></div>
+          <div><b id="last-play-session">This is the first hello!</b><small>Previous play session</small></div>
+          <div><b id="favorite-treat">Still discovering</b><small>Favourite treat</small></div>
+        </div>
+        <div class="mochi-diary-title">Little diary <span>💗</span></div>
+        <ul id="mochi-diary" class="mochi-diary"><li>Mochi is waiting to make her first memory!</li></ul>
+      </article>
+    </div>
+  </section>
+
   <section class="card bond-card" aria-live="polite">
     <div class="bond-topline"><span>🐾 PAWPRINT BOND</span><span id="bond-level">New Friend</span></div>
     <p class="bond-greeting" id="bond-greeting">Mochi is excited to meet you! 💗</p>
