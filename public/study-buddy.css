@@ -61,3 +61,10 @@
 @media(max-width:850px){.study-layout{grid-template-columns:1fr}.study-scene{min-height:500px}.study-console{max-width:none}}
 @media(max-width:560px){.study-wrap{padding:14px 10px 25px}.study-heading{align-items:flex-start;flex-direction:column}.study-back{font-size:11px}.study-scene{min-height:420px}.student-avatar{left:22%;width:145px;height:185px}.mochi-study-cat{right:1%;transform:scale(.8);transform-origin:bottom right}.scene-wall-note{right:4%;top:35%;font-size:10px}.desk-laptop{left:19%;width:33%;height:70px}.scene-caption{font-size:10px}.study-console{padding:17px!important}}
 @media(prefers-reduced-motion:reduce){.student-avatar,.mochi-study-cat,.cat-z{animation:none!important}}
+
+/* Use the uploaded original study-room artwork as the main scene. */
+.study-scene{min-height:0;aspect-ratio:1648/928;height:auto;align-self:start;background:#35264e;border:4px solid #8b6593;overflow:hidden;position:relative}
+.study-art{display:block;width:100%;height:100%;object-fit:cover;image-rendering:auto}
+.study-scene .scene-caption{left:2%;bottom:2%;max-width:78%;font-size:clamp(10px,1vw,13px);background:rgba(255,240,247,.94);backdrop-filter:blur(4px)}
+@media(max-width:850px){.study-scene{min-height:0;aspect-ratio:1648/928}}
+@media(max-width:560px){.study-scene{min-height:0;aspect-ratio:1648/928}.study-scene .scene-caption{font-size:9px;padding:7px 9px}}
