@@ -445,54 +445,7 @@
   const weatherStatus = $('weather-status');
   const weatherLayer = $('weather-layer');
   const timeStatus = $('cozy-time-status');
-  const studyDuration = {focus:25*60,break:5*60};
-  let studyPhase='focus', studyRemaining=studyDuration.focus, studyDeadline=0, studyInterval=null, studyRunning=false;
-  state.studySessions = Number(state.studySessions)||0;
-  state.studyMinutes = Number(state.studyMinutes)||0;
-  function renderStudyStats(){
-    $('study-sessions').textContent=state.studySessions;
-    $('study-minutes').textContent=state.studyMinutes;
-  }
-  function renderStudyTimer(){
-    const mm=String(Math.floor(studyRemaining/60)).padStart(2,'0');
-    const ss=String(studyRemaining%60).padStart(2,'0');
-    $('study-timer').textContent=mm+':'+ss;
-    $('study-phase').textContent=studyPhase==='focus'?'📚 Focus time — Mochi is studying too!':'☕ Break time — stretch and have some water!';
-    $('study-start-btn').textContent=studyRunning?'Ⅱ Pause':'▶ '+(studyRemaining<(studyPhase==='focus'?studyDuration.focus:studyDuration.break)?'Resume':'Start studying');
-  }
-  function stopStudyClock(){if(studyInterval){clearInterval(studyInterval);studyInterval=null;}}
-  function finishStudyPhase(){
-    stopStudyClock();studyRunning=false;
-    if(studyPhase==='focus'){
-      state.studySessions++;state.studyMinutes+=25;save();renderStudyStats();
-      diaryNote('📚 You finished a 25-minute study session with Mochi!');
-      unlockMilestone('first_study_session','You completed your first study session together!');
-      $('study-message').textContent='YOU DID IT!! Mochi is doing a happy dance for you! 🎉';
-      message('Study session complete! Mochi is so proud of you!','PROUD');
-      speak('room',true);react('✨','purr');playSound('arrive');
-      studyPhase='break';studyRemaining=studyDuration.break;
-    } else {
-      $('study-message').textContent='Break complete! Ready for another little focus adventure? 💗';
-      studyPhase='focus';studyRemaining=studyDuration.focus;
-    }
-    renderStudyTimer();
-  }
-  function tickStudy(){
-    studyRemaining=Math.max(0,Math.ceil((studyDeadline-Date.now())/1000));
-    if(studyRemaining===0){finishStudyPhase();return;}
-    renderStudyTimer();
-  }
-  $('study-start-btn').addEventListener('click',()=>{
-    if(studyRunning){studyRemaining=Math.max(0,Math.ceil((studyDeadline-Date.now())/1000));studyRunning=false;stopStudyClock();$('study-message').textContent='Paused. Mochi saved your place — take your time.';renderStudyTimer();return;}
-    studyRunning=true;studyDeadline=Date.now()+studyRemaining*1000;
-    $('study-message').textContent=studyPhase==='focus'?'Shhh... tiny study paws at work. You can do this!':'Enjoy your little break with Mochi.';
-    renderStudyTimer();studyInterval=setInterval(tickStudy,250);
-  });
-  $('study-reset-btn').addEventListener('click',()=>{
-    stopStudyClock();studyRunning=false;studyPhase='focus';studyRemaining=studyDuration.focus;
-    $('study-message').textContent='Fresh page, fresh start. Mochi believes in you! 💗';renderStudyTimer();
-  });
-  renderStudyStats();renderStudyTimer();
+
 
   function updateDayNight(){
     const hour=new Date().getHours();
