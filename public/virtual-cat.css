@@ -177,3 +177,46 @@
 @keyframes dream-float{0%,100%{translate:0 0}50%{translate:0 -5px}}
 .room-plant.plant-tipped{transform:rotate(70deg) translate(7px,10px);transform-origin:bottom center;transition:transform .25s}
 @media(max-width:650px){.mochi-feature-grid{grid-template-columns:1fr}.mochi-section-heading{align-items:flex-start;flex-direction:column}.mochi-memory-stats{grid-template-columns:1fr 1fr}.mochi-memory-stats div:last-child{grid-column:1/-1}}
+
+
+/* Mochi's Cozy Life: weather ambience, local day/night and Study Buddy. */
+.cozy-room-controls{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:8px 4px 0}
+.cozy-weather-control{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
+.cozy-weather-control .sound-toggle{margin:0}
+#weather-status,.cozy-time-status{font-size:10px;line-height:1.5;opacity:.72}
+.cozy-time-status{font-weight:800}
+.weather-layer{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden;color:rgba(255,255,255,.8);font-size:26px;letter-spacing:9px;text-align:center;padding-top:14px;text-shadow:1px 2px 2px rgba(55,75,100,.2)}
+.pixel-room[data-time="dawn"]{background:linear-gradient(#f6c7ae 0%,#f4d9c5 45%,#e8c99c 58% 100%)}
+.pixel-room[data-time="sunset"]{background:linear-gradient(#e99c91 0%,#f5c49a 48%,#e8c99c 58% 100%)}
+.pixel-room[data-time="night"]{background:linear-gradient(#263653 0%,#455475 57%,#b69a91 58% 100%)}
+.pixel-room[data-time="night"] .room-window{background:linear-gradient(#25375b,#59688a);color:#f8e8ad}
+.pixel-room[data-time="night"] .room-window:after{content:"☾  ✦  ·  ✧";position:absolute;color:#fff1bd;font-size:16px;inset:12px 2px;display:grid;place-items:center}
+.pixel-room[data-time="night"] .room-hint{color:#fff1dc}
+.pixel-room[data-time="night"] .room-topline{color:#f2dce9}
+.pixel-room[data-time="night"] .room-rug{filter:brightness(.82)}
+.pixel-room.weather-rain .weather-layer:before{content:"";position:absolute;inset:-30% 0;background:repeating-linear-gradient(105deg,transparent 0 18px,rgba(255,255,255,.5) 19px 21px,transparent 22px 38px);animation:rain-fall .65s linear infinite}
+.pixel-room.weather-snow .weather-layer:before{content:"❄   ·    ❅      ❄     ·    ❅";position:absolute;inset:10px 0;line-height:3.5;white-space:normal;animation:snow-drift 5s linear infinite}
+.pixel-room.weather-sunny .weather-layer:before{content:"☀";position:absolute;right:13%;top:12%;font-size:48px;filter:drop-shadow(0 0 12px #ffe39a);animation:sun-pulse 3s ease-in-out infinite}
+.pixel-room.weather-cloudy .weather-layer:before{content:"☁       ☁";position:absolute;left:10%;top:10%;font-size:30px;animation:cloud-drift 12s ease-in-out infinite alternate}
+.pixel-room.weather-fog .weather-layer:before{content:"";position:absolute;inset:35% -10% 15%;background:repeating-linear-gradient(0deg,rgba(255,255,255,.28) 0 9px,transparent 10px 24px);filter:blur(5px)}
+.pixel-room.weather-storm .weather-layer:before{content:"⚡";position:absolute;right:18%;top:13%;font-size:34px;color:#fff0a8}
+@keyframes rain-fall{from{transform:translateY(-20%)}to{transform:translateY(20%)}}
+@keyframes snow-drift{0%{transform:translate(0,-10px)}100%{transform:translate(12px,30px)}}
+@keyframes sun-pulse{50%{transform:scale(1.1)}}
+@keyframes cloud-drift{to{transform:translateX(20px)}}
+.study-buddy-card{background:linear-gradient(145deg,rgba(239,232,255,.58),rgba(255,245,249,.8))}
+.study-buddy-scene{height:78px;display:flex;align-items:center;justify-content:center;gap:13px;border-radius:12px;background:linear-gradient(180deg,#dce8fa,#f8e4ed);font-size:27px;position:relative;overflow:hidden}
+.study-cat{font-size:35px;filter:drop-shadow(2px 3px 0 rgba(80,60,70,.12));animation:study-bob 2s steps(2,end) infinite}
+.study-book{font-size:30px;transform:rotate(-8deg)}
+.study-pencil{font-size:24px;transform:rotate(25deg)}
+.study-moon{position:absolute;right:15%;top:8px;color:#fff;font-size:17px}
+.study-timer{font-size:42px;font-weight:900;letter-spacing:2px;text-align:center;color:#98648d;font-variant-numeric:tabular-nums;margin:12px 0 0}
+.study-phase{text-align:center;font-size:11px;font-weight:800;margin:2px 0 12px;opacity:.75}
+.study-controls{display:flex;gap:8px}
+.study-controls button{flex:1;border:1px solid rgba(150,100,140,.22);border-radius:9px;padding:10px;background:#fff5fa;color:#825777;font-size:11px;font-weight:900;cursor:pointer}
+.study-controls button:first-child{background:#a978a5;color:white}
+.study-stats{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:12px;font-size:10px;opacity:.75}
+.study-stats b{color:#94628b}
+@keyframes study-bob{50%{transform:translateY(-4px)}}
+@media(prefers-reduced-motion:reduce){.weather-layer:before,.study-cat,.pixel-room.weather-snow .weather-layer:before{animation:none!important}}
+@media(max-width:520px){.cozy-room-controls{align-items:flex-start;flex-direction:column}.study-timer{font-size:36px}}
