@@ -24,6 +24,7 @@
     <div class="room-card card">
       <div class="room-topline"><span>🏡 MY CAT'S ROOM</span><span id="mood-label">MOOD: CURIOUS</span></div>
       <div class="pixel-room" id="pixel-room" aria-label="Your virtual cat's room. Tap a spot to move your cat.">
+        <div class="weather-layer" id="weather-layer" aria-hidden="true"></div>
         <div class="room-window"><span>✦</span><span>☁</span><span>✦</span></div>
         <div class="room-shelf"><i></i><i></i><i></i></div>
         <div class="room-plant">🌱</div>
@@ -47,6 +48,13 @@
         <div class="room-hint" id="room-hint">Tap anywhere in the room to call your cat 🐾</div>
       </div>
       <div class="room-footer"><span>🐾 <b id="cat-level">Level 1</b></span><span id="action-message" aria-live="polite">Your new friend is waiting!</span></div>
+      <div class="cozy-room-controls">
+        <div class="cozy-weather-control">
+          <button type="button" class="sound-toggle" id="weather-enable-btn">🌦️ Check local weather</button>
+          <span id="weather-status" aria-live="polite">Weather is optional — Mochi won't access your location unless you ask.</span>
+        </div>
+        <div class="cozy-time-status" id="cozy-time-status">☀️ A lovely new day</div>
+      </div>
       <button type="button" class="sound-toggle" id="sound-toggle" aria-pressed="true">🔊 Sound on</button>
     </div>
     <aside class="pet-panel">
@@ -128,6 +136,13 @@
         </div>
         <div class="mochi-diary-title">Little diary <span>💗</span></div>
         <ul id="mochi-diary" class="mochi-diary"><li>Mochi is waiting to make her first memory!</li></ul>
+      </article>
+      <article class="card mochi-feature-card study-buddy-card">
+        <div class="panel-label">📚 STUDY BUDDY MODE</div>
+        <p class="mochi-feature-copy">Open your own cozy study room. Your student avatar and Mochi will keep you company while you focus.</p>
+        <div class="study-buddy-scene"><span class="study-moon">✦</span><span class="study-cat">🐈‍⬛</span><span class="study-book">📖</span><span class="study-pencil">✏️</span></div>
+        <a class="study-open-link" href="/study-buddy.html" target="_blank" rel="noopener noreferrer">☕ Open Study Room in a new tab ↗</a>
+        <p class="mochi-feature-status">25-minute focus sessions, 5-minute breaks and Mochi's encouragement. Your study totals stay with your existing cat save. 💗</p>
       </article>
     </div>
   </section>

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mochi's Study Room — I Love Meow</title>
+<meta name="description" content="A cozy full-screen study room with Mochi. Focus, take breaks and celebrate your progress.">
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/study-buddy.css">
+<script>(function(){var t=localStorage.getItem("ilm_theme")||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",t);})();</script>
+</head>
+<body class="study-page">
+<main class="study-fullscreen">
+  <div class="study-scene" aria-label="Full-screen cozy pixel-art study room with a student and Mochi">
+    <img class="study-art" src="/images/Cozy%20Moonlit%20Cat%20Study%20Nook.png" alt="A student in pink headphones studies beside a sleeping black cat in a cozy moonlit room">
+    <div class="scene-vignette" aria-hidden="true"></div>
+    <a class="study-back" href="/virtual-cat.html">← Back to Mochi</a>
+    <div class="scene-brand"><span class="brand-paw">🐾</span><span>MOCHI'S STUDY ROOM<small>A LITTLE SPACE FOR BIG DREAMS</small></span></div>
+    <div class="scene-caption" id="scene-caption">Mochi says: "One page at a time, hooman!" ♡</div>
+
+    <section class="study-console" aria-label="Study timer and controls">
+      <div class="console-top"><span>YOUR STUDY SESSION</span><span class="live-dot" id="study-live-dot">READY</span></div>
+      <div class="timer-mode">
+        <button type="button" class="mode-button active" id="focus-mode-btn">✦ Focus · 25 min</button>
+        <button type="button" class="mode-button" id="break-mode-btn">☕ Break · 5 min</button>
+      </div>
+      <div class="big-study-timer" id="study-timer" role="timer" aria-live="off">25:00</div>
+      <p class="study-phase" id="study-phase" aria-live="polite">Ready when you are. Take a breath.</p>
+      <div class="timer-progress"><i id="timer-progress-fill"></i></div>
+      <div class="timer-controls">
+        <button type="button" class="study-primary" id="study-start-btn">▶ Start focus</button>
+        <button type="button" class="study-secondary" id="study-reset-btn" aria-label="Reset timer">↺</button>
+      </div>
+      <div class="study-encouragement" id="study-message" aria-live="polite"><span class="encouragement-paw">🐾</span><span><b>Mochi believes in you!</b><small>One little step at a time. ♡</small></span></div>
+      <div class="study-stat-grid">
+        <div><span>📚</span><b id="study-sessions">0</b><small>Sessions</small></div>
+        <div><span>⏳</span><b id="study-minutes">0</b><small>Focus minutes</small></div>
+      </div>
+      <p class="study-tip"><span>💡</span> <span id="study-tip">Keep a glass of water nearby and rest your eyes during breaks.</span></p>
+      <p class="study-save-note">Your progress is saved with Mochi in this browser ♡</p>
+    </section>
+    <div class="scene-bottom-note">Breathe in · Focus gently · You are doing lovely</div>
+  </div>
+</main>
+<script src="/app.js"></script>
+<script src="/study-buddy.js"></script>
+</body>
+</html>

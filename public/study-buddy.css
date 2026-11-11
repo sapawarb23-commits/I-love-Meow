@@ -1,0 +1,72 @@
+:root{color-scheme:light}
+html,body{width:100%;height:100%;min-height:100%;margin:0;overflow:hidden}
+body.study-page{background:#211a38}
+.study-fullscreen{position:fixed;inset:0;width:100vw;height:100dvh;overflow:hidden;background:#211a38}
+.study-scene{position:absolute;inset:0;overflow:hidden;background:#302443;isolation:isolate}
+.study-art{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center center;image-rendering:auto}
+.scene-vignette{position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(90deg,rgba(20,16,39,.06) 0%,rgba(20,16,39,0) 38%,rgba(20,16,39,.12) 100%),linear-gradient(0deg,rgba(22,16,39,.4),transparent 22%,transparent 76%,rgba(22,16,39,.18))}
+.study-back{position:absolute;z-index:5;left:clamp(14px,2.4vw,34px);top:clamp(14px,2.4vh,28px);display:inline-flex;align-items:center;padding:10px 15px;border:1px solid rgba(255,239,250,.5);border-radius:999px;background:rgba(48,34,69,.52);backdrop-filter:blur(12px);color:#fff4fb;text-decoration:none;font-size:12px;font-weight:800;box-shadow:0 4px 18px #1d153344}
+.scene-brand{position:absolute;z-index:4;top:clamp(18px,2.7vh,32px);left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:10px;color:#fff4fb;text-align:left;text-shadow:0 2px 8px #302044;font-size:12px;font-weight:950;letter-spacing:1.5px;white-space:nowrap}
+.scene-brand small{display:block;margin-top:3px;font-size:8px;letter-spacing:2px;opacity:.8}
+.brand-paw{font-size:26px}
+.scene-caption{position:absolute;z-index:4;left:clamp(14px,2.5vw,36px);bottom:clamp(16px,3vh,34px);max-width:min(42vw,440px);padding:11px 15px;border:1px solid rgba(255,221,244,.72);border-radius:13px;background:rgba(255,242,250,.86);backdrop-filter:blur(12px);color:#795575;font-size:clamp(10px,1vw,13px);font-weight:900;box-shadow:0 5px 22px #24173533}
+.study-console{position:absolute;z-index:5;right:clamp(14px,3vw,44px);top:50%;transform:translateY(-50%);width:min(330px,30vw);max-height:calc(100% - 120px);overflow:auto;padding:clamp(15px,1.8vw,23px);border:1px solid rgba(255,238,250,.62);border-radius:22px;background:rgba(255,248,253,.83);backdrop-filter:blur(18px) saturate(1.2);box-shadow:0 16px 50px rgba(24,14,42,.28);color:#775579;scrollbar-width:thin}
+.console-top{display:flex;align-items:center;justify-content:space-between;gap:8px;color:#916a91;font-size:9px;font-weight:950;letter-spacing:1.4px}
+.live-dot{padding:5px 9px;border-radius:20px;background:#eee5f5;color:#94729e;font-size:9px;letter-spacing:1px}
+.live-dot.running{background:#e4f3e6;color:#528a64}
+.timer-mode{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:17px 0 5px}
+.mode-button{border:1px solid #e4c9e3;border-radius:10px;padding:9px 5px;background:rgba(255,247,253,.88);color:#8c6b91;font-size:10px;font-weight:900;cursor:pointer}
+.mode-button.active{background:#bd88b8;color:#fff;border-color:#bd88b8;box-shadow:0 3px 0 #93668f}
+.big-study-timer{text-align:center;font-size:clamp(48px,5vw,66px);font-weight:950;letter-spacing:2px;color:#795787;font-variant-numeric:tabular-nums;margin:8px 0 0;text-shadow:0 2px #fff}
+.study-phase{text-align:center;color:#917c97;font-size:11px;min-height:29px;margin:2px 0 12px;line-height:1.45}
+.timer-progress{height:8px;border-radius:99px;background:#eaddec;overflow:hidden}
+.timer-progress i{display:block;width:0;height:100%;border-radius:99px;background:linear-gradient(90deg,#e59cc4,#9f8bce);transition:width .25s}
+.timer-controls{display:flex;gap:8px;margin-top:15px}
+.timer-controls button{border:0;border-radius:11px;padding:11px 8px;font-size:11px;font-weight:950;cursor:pointer}
+.timer-controls .study-primary{flex:1;background:#a77caf;color:white;box-shadow:0 4px 0 #805c8b}
+.timer-controls .study-secondary{width:46px;background:#f4e8f2;color:#896b91;border:1px solid #e6cfe4}
+.study-encouragement{display:flex;align-items:center;gap:10px;padding:10px;margin-top:14px;border:1px solid #ead2e5;border-radius:12px;background:rgba(255,243,249,.9);color:#805b80}
+.encouragement-paw{font-size:24px}
+.study-encouragement b,.study-encouragement small{display:block}
+.study-encouragement b{font-size:11px}.study-encouragement small{font-size:9px;opacity:.75;margin-top:3px;line-height:1.4}
+.study-stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:11px}
+.study-stat-grid div{padding:9px 6px;text-align:center;border-radius:10px;background:rgba(240,232,247,.92);color:#775b85}
+.study-stat-grid span,.study-stat-grid b,.study-stat-grid small{display:block}
+.study-stat-grid span{font-size:16px}.study-stat-grid b{font-size:20px;margin:2px 0}.study-stat-grid small{font-size:9px;opacity:.72}
+.study-tip{display:flex;gap:7px;margin:11px 0 0;padding:9px;border-radius:10px;background:rgba(255,246,223,.94);color:#8a714b;font-size:9px;line-height:1.45}
+.study-tip span:first-child{font-size:14px}
+.study-save-note{text-align:center;font-size:8px;line-height:1.4;color:#9b879e;margin:9px 0 0}
+.scene-bottom-note{position:absolute;z-index:3;left:50%;bottom:clamp(15px,2.8vh,30px);transform:translateX(-50%);color:rgba(255,245,252,.9);font-size:9px;letter-spacing:1.4px;text-shadow:0 2px 8px #21172f;white-space:nowrap}
+@keyframes room-breathe{0%,100%{transform:scale(1) translateY(0)}33%{transform:scale(1.008) translateY(-1px)}66%{transform:scale(1.004) translateY(1px)}}
+@media(max-width:760px){
+ .study-art{object-position:46% center}
+ .scene-brand{top:13px;left:50%;font-size:10px}
+ .study-console{top:auto;right:12px;bottom:12px;transform:none;width:min(285px,calc(100vw - 24px));max-height:54vh;padding:13px;border-radius:17px}
+ .big-study-timer{font-size:43px}
+ .timer-mode{margin-top:10px}
+ .study-phase{min-height:22px;margin-bottom:8px}
+ .study-encouragement{margin-top:9px;padding:8px}
+ .study-tip{display:none}
+ .study-save-note{margin-top:6px}
+ .scene-caption{left:12px;bottom:calc(54vh + 22px);max-width:calc(100vw - 48px);font-size:10px}
+ .scene-bottom-note{display:none}
+}
+@media(max-width:430px){
+ .study-console{max-height:58vh}
+ .scene-caption{bottom:calc(58vh + 22px)}
+ .scene-brand small{font-size:7px}
+ .study-back{font-size:10px;padding:8px 10px}
+ .study-stat-grid{margin-top:8px}
+}
+@media(max-height:650px) and (min-width:761px){
+ .study-console{max-height:calc(100% - 70px);padding:13px;width:min(300px,28vw)}
+ .big-study-timer{font-size:46px}
+ .study-tip{display:none}
+ .study-encouragement{margin-top:9px;padding:8px}
+}
+@media(prefers-reduced-motion:reduce){.study-art{animation:none!important}}
+
+
+/* Static artwork: keep all movement off until requested. */
+.study-art{animation:none!important;transform:none!important}
+.student-motion-frame,.mochi-motion-frame{display:none!important}
