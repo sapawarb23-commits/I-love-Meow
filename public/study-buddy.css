@@ -65,3 +65,11 @@ body.study-page{background:#211a38}
  .study-encouragement{margin-top:9px;padding:8px}
 }
 @media(prefers-reduced-motion:reduce){.study-art{animation:none!important}}
+
+/* Tiny three-pose loops over the matching characters in the artwork. */
+.student-motion-frame,.mochi-motion-frame{position:absolute;z-index:1;inset:0;pointer-events:none;background-image:url('/images/Mochi%20study%20room.png');background-size:cover;background-position:center;background-repeat:no-repeat;will-change:transform}
+.student-motion-frame{clip-path:polygon(24% 26%,63% 26%,63% 91%,24% 91%);animation:student-three-pose 4.2s steps(1,end) infinite}
+.mochi-motion-frame{clip-path:polygon(61% 57%,98% 57%,98% 98%,61% 98%);animation:mochi-three-pose 3.1s steps(1,end) infinite}
+@keyframes student-three-pose{0%,100%{transform:translateY(0)}33%{transform:translateY(-1px)}66%{transform:translateY(1px)}}
+@keyframes mochi-three-pose{0%,100%{transform:translateY(0) rotate(0)}33%{transform:translateY(1px)}66%{transform:translateY(-1px)}}
+@media(prefers-reduced-motion:reduce){.student-motion-frame,.mochi-motion-frame{animation:none!important}}
