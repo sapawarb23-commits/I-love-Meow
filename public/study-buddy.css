@@ -3,7 +3,7 @@ html,body{width:100%;height:100%;min-height:100%;margin:0;overflow:hidden}
 body.study-page{background:#211a38}
 .study-fullscreen{position:fixed;inset:0;width:100vw;height:100dvh;overflow:hidden;background:#211a38}
 .study-scene{position:absolute;inset:0;overflow:hidden;background:#302443;isolation:isolate}
-.study-art{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center center;image-rendering:auto;animation:room-breathe 8s steps(3,end) infinite;transform-origin:50% 58%}
+.study-art{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center center;image-rendering:auto}
 .scene-vignette{position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(90deg,rgba(20,16,39,.06) 0%,rgba(20,16,39,0) 38%,rgba(20,16,39,.12) 100%),linear-gradient(0deg,rgba(22,16,39,.4),transparent 22%,transparent 76%,rgba(22,16,39,.18))}
 .study-back{position:absolute;z-index:5;left:clamp(14px,2.4vw,34px);top:clamp(14px,2.4vh,28px);display:inline-flex;align-items:center;padding:10px 15px;border:1px solid rgba(255,239,250,.5);border-radius:999px;background:rgba(48,34,69,.52);backdrop-filter:blur(12px);color:#fff4fb;text-decoration:none;font-size:12px;font-weight:800;box-shadow:0 4px 18px #1d153344}
 .scene-brand{position:absolute;z-index:4;top:clamp(18px,2.7vh,32px);left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:10px;color:#fff4fb;text-align:left;text-shadow:0 2px 8px #302044;font-size:12px;font-weight:950;letter-spacing:1.5px;white-space:nowrap}
@@ -66,10 +66,7 @@ body.study-page{background:#211a38}
 }
 @media(prefers-reduced-motion:reduce){.study-art{animation:none!important}}
 
-/* Tiny three-pose loops over the matching characters in the artwork. */
-.student-motion-frame,.mochi-motion-frame{position:absolute;z-index:1;inset:0;pointer-events:none;background-image:url('/images/Mochi%20study%20room.png');background-size:cover;background-position:center;background-repeat:no-repeat;will-change:transform}
-.student-motion-frame{clip-path:polygon(24% 26%,63% 26%,63% 91%,24% 91%);animation:student-three-pose 4.2s steps(1,end) infinite}
-.mochi-motion-frame{clip-path:polygon(61% 57%,98% 57%,98% 98%,61% 98%);animation:mochi-three-pose 3.1s steps(1,end) infinite}
-@keyframes student-three-pose{0%,100%{transform:translateY(0)}33%{transform:translateY(-1px)}66%{transform:translateY(1px)}}
-@keyframes mochi-three-pose{0%,100%{transform:translateY(0) rotate(0)}33%{transform:translateY(1px)}66%{transform:translateY(-1px)}}
-@media(prefers-reduced-motion:reduce){.student-motion-frame,.mochi-motion-frame{animation:none!important}}
+
+/* Static artwork: keep all movement off until requested. */
+.study-art{animation:none!important;transform:none!important}
+.student-motion-frame,.mochi-motion-frame{display:none!important}
