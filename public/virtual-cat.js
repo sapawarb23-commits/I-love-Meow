@@ -439,4 +439,116 @@
   renderMochiMemories();
   scheduleMischief();
 
+
+  // Cozy Life: local-time room ambience, opt-in weather and Study Buddy.
+  const weatherButton = $('weather-enable-btn');
+  const weatherStatus = $('weather-status');
+  const weatherLayer = $('weather-layer');
+  const timeStatus = $('cozy-time-status');
+  const studyDuration = {focus:25*60,break:5*60};
+  let studyPhase='focus', studyRemaining=studyDuration.focus, studyDeadline=0, studyInterval=null, studyRunning=false;
+  state.studySessions = Number(state.studySessions)||0;
+  state.studyMinutes = Number(state.studyMinutes)||0;
+  function renderStudyStats(){
+    $('study-sessions').textContent=state.studySessions;
+    $('study-minutes').textContent=state.studyMinutes;
+  }
+  function renderStudyTimer(){
+    const mm=String(Math.floor(studyRemaining/60)).padStart(2,'0');
+    const ss=String(studyRemaining%60).padStart(2,'0');
+    $('study-timer').textContent=mm+':'+ss;
+    $('study-phase').textContent=studyPhase==='focus'?'📚 Focus time — Mochi is studying too!':'☕ Break time — stretch and have some water!';
+    $('study-start-btn').textContent=studyRunning?'Ⅱ Pause':'▶ '+(studyRemaining<(studyPhase==='focus'?studyDuration.focus:studyDuration.break)?'Resume':'Start studying');
+  }
+  function stopStudyClock(){if(studyInterval){clearInterval(studyInterval);studyInterval=null;}}
+  function finishStudyPhase(){
+    stopStudyClock();studyRunning=false;
+    if(studyPhase==='focus'){
+      state.studySessions++;state.studyMinutes+=25;save();renderStudyStats();
+      diaryNote('📚 You finished a 25-minute study session with Mochi!');
+      unlockMilestone('first_study_session','You completed your first study session together!');
+      $('study-message').textContent='YOU DID IT!! Mochi is doing a happy dance for you! 🎉';
+      message('Study session complete! Mochi is so proud of you!','PROUD');
+      speak('room',true);react('✨','purr');playSound('arrive');
+      studyPhase='break';studyRemaining=studyDuration.break;
+    } else {
+      $('study-message').textContent='Break complete! Ready for another little focus adventure? 💗';
+      studyPhase='focus';studyRemaining=studyDuration.focus;
+    }
+    renderStudyTimer();
+  }
+  function tickStudy(){
+    studyRemaining=Math.max(0,Math.ceil((studyDeadline-Date.now())/1000));
+    if(studyRemaining===0){finishStudyPhase();return;}
+    renderStudyTimer();
+  }
+  $('study-start-btn').addEventListener('click',()=>{
+    if(studyRunning){studyRemaining=Math.max(0,Math.ceil((studyDeadline-Date.now())/1000));studyRunning=false;stopStudyClock();$('study-message').textContent='Paused. Mochi saved your place — take your time.';renderStudyTimer();return;}
+    studyRunning=true;studyDeadline=Date.now()+studyRemaining*1000;
+    $('study-message').textContent=studyPhase==='focus'?'Shhh... tiny study paws at work. You can do this!':'Enjoy your little break with Mochi.';
+    renderStudyTimer();studyInterval=setInterval(tickStudy,250);
+  });
+  $('study-reset-btn').addEventListener('click',()=>{
+    stopStudyClock();studyRunning=false;studyPhase='focus';studyRemaining=studyDuration.focus;
+    $('study-message').textContent='Fresh page, fresh start. Mochi believes in you! 💗';renderStudyTimer();
+  });
+  renderStudyStats();renderStudyTimer();
+
+  function updateDayNight(){
+    const hour=new Date().getHours();
+    let mode,label;
+    if(hour>=6&&hour<10){mode='dawn';label='🌅 Good morning — the world is waking up';}
+    else if(hour>=10&&hour<17){mode='day';label='☀️ Sunny little daytime';}
+    else if(hour>=17&&hour<20){mode='sunset';label='🌇 Golden hour with Mochi';}
+    else {mode='night';label='🌙 Cozy night-time — stars are out';}
+    room.dataset.time=mode;
+    timeStatus.textContent=label;
+    if(mode==='night' && !pet.classList.contains('sleeping')) room.classList.add('night-cozy');
+    else room.classList.remove('night-cozy');
+  }
+  updateDayNight();
+  setInterval(updateDayNight,60000);
+
+  const weatherLooks={
+    clear:{label:'sunny',emoji:'☀️',line:'SUNSHINE!! Let us bask in the warm rays!',className:'weather-sunny'},
+    partly:{label:'partly cloudy',emoji:'🌤️',line:'The clouds look like tiny fluffy sheep!',className:'weather-cloudy'},
+    cloudy:{label:'cloudy',emoji:'☁️',line:'A perfect day for window watching.',className:'weather-cloudy'},
+    fog:{label:'foggy',emoji:'🌫️',line:'The world looks like a mysterious dream...',className:'weather-fog'},
+    rain:{label:'rainy',emoji:'🌧️',line:'Rainy window cuddles? Mochi votes YES.',className:'weather-rain'},
+    snow:{label:'snowy',emoji:'❄️',line:'SNOWFLAKES!! Mochi wants to boop them all!',className:'weather-snow'},
+    storm:{label:'stormy',emoji:'⛈️',line:'A little thunder! Mochi is staying cozy with you.',className:'weather-storm'}
+  };
+  function weatherKind(code){
+    if(code===0)return 'clear';
+    if(code===1||code===2)return 'partly';
+    if(code===3)return 'cloudy';
+    if(code===45||code===48)return 'fog';
+    if(code>=71&&code<=77||code===85||code===86)return 'snow';
+    if(code>=95&&code<=99)return 'storm';
+    if(code>=51&&code<=67||code>=80&&code<=82)return 'rain';
+    return 'cloudy';
+  }
+  weatherButton.addEventListener('click',()=>{
+    if(!navigator.geolocation){weatherStatus.textContent='This browser does not support location. You can still enjoy the day/night cycle!';return;}
+    weatherButton.disabled=true;weatherStatus.textContent='Asking permission for your local weather…';
+    navigator.geolocation.getCurrentPosition(async position=>{
+      try{
+        const lat=position.coords.latitude,lon=position.coords.longitude;
+        const url='https://api.open-meteo.com/v1/forecast?latitude='+encodeURIComponent(lat)+'&longitude='+encodeURIComponent(lon)+'&current=temperature_2m,weather_code,is_day&timezone=auto';
+        const response=await fetch(url,{headers:{Accept:'application/json'}});
+        if(!response.ok)throw new Error('Weather service unavailable');
+        const data=await response.json(),kind=weatherKind(Number(data.current?.weather_code)),look=weatherLooks[kind];
+        Object.keys(weatherLooks).forEach(k=>room.classList.remove(weatherLooks[k].className));
+        room.classList.add(look.className);weatherLayer.textContent=kind==='rain'?'〰　⋰　⋱　〰　⋰　⋱':kind==='snow'?'❄　✦　❄　✧　❄':'';
+        weatherStatus.textContent=look.emoji+' '+look.label+' · '+Math.round(data.current.temperature_2m)+'°C · live local weather';
+        $('weather-enable-btn').textContent='↻ Refresh weather';
+        message(look.line,'COZY');speak('room',true);
+      }catch(error){weatherStatus.textContent='Could not load weather right now. Please try again later.';}
+      finally{weatherButton.disabled=false;}
+    },error=>{
+      weatherStatus.textContent=error.code===1?'Location permission was declined. No worries — Mochi can still enjoy the day/night cycle.':'Could not get your location. Try again when you like.';
+      weatherButton.disabled=false;
+    },{enableHighAccuracy:false,timeout:10000,maximumAge:15*60*1000});
+  });
+
 })();
