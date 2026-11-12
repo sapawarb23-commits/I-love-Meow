@@ -133,6 +133,8 @@ CREATE TABLE IF NOT EXISTS follows (
   created_at TEXT DEFAULT (datetime('now')),
   PRIMARY KEY (follower_id, followee_id)
 );
+CREATE INDEX IF NOT EXISTS idx_follows_followee ON follows(followee_id, created_at DESC);
+
 
 CREATE TABLE IF NOT EXISTS search_logs (
   id TEXT PRIMARY KEY,
