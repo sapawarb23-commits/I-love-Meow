@@ -525,6 +525,53 @@ route('GET', '/api/explore', async (req, res, params, query) => {
   sendJson(res, 200, { results: page, total: shaped.length, hasMore: offset + limit < shaped.length });
 });
 
+// ---- Account profiles and follows ----
+
+route('GET', '/api/users/:id', async (req, res, params) => {
+  const viewer = await getAuthedUser(req);
+  const profile = await get('SELECT id, username, bio, avatar_emoji, avatar_url, cover_url, meowment_points, created_at FROM users WHERE id = ?', [params.id]);
+  if (!profile) throw new ApiError(404, 'NOT_FOUND', 'This account could not be found.');
+  const [followers, following, viewerFollows] = await Promise.all([
+    get('SELECT COUNT(*) AS count FROM follows WHERE followee_id = ?', [params.id]),
+    get('SELECT COUNT(*) AS count FROM follows WHERE follower_id = ?', [params.id]),
+    viewer && viewer.id !== params.id ? get('SELECT 1 AS yes FROM follows WHERE follower_id = ? AND followee_id = ?', [viewer.id, params.id]) : Promise.resolve(null),
+  ]);
+  sendJson(res, 200, { user: profile, followers: followers.count, following: following.count, is_following: !!viewerFollows, is_self: !!viewer && viewer.id === params.id });
+});
+
+route('GET', '/api/users/:id/followers', async (req, res, params) => {
+  const exists = await get('SELECT id FROM users WHERE id = ?', [params.id]);
+  if (!exists) throw new ApiError(404, 'NOT_FOUND', 'This account could not be found.');
+  const users = await all('SELECT u.id, u.username, u.avatar_emoji, u.avatar_url, u.bio FROM follows f JOIN users u ON u.id = f.follower_id WHERE f.followee_id = ? ORDER BY f.created_at DESC LIMIT 100', [params.id]);
+  sendJson(res, 200, { users });
+});
+
+route('GET', '/api/users/:id/following', async (req, res, params) => {
+  const exists = await get('SELECT id FROM users WHERE id = ?', [params.id]);
+  if (!exists) throw new ApiError(404, 'NOT_FOUND', 'This account could not be found.');
+  const users = await all('SELECT u.id, u.username, u.avatar_emoji, u.avatar_url, u.bio FROM follows f JOIN users u ON u.id = f.followee_id WHERE f.follower_id = ? ORDER BY f.created_at DESC LIMIT 100', [params.id]);
+  sendJson(res, 200, { users });
+});
+
+route('POST', '/api/users/:id/follow', async (req, res, params) => {
+  const viewer = await getAuthedUser(req);
+  if (!viewer) throw new ApiError(401, 'UNAUTHENTICATED', 'Please log in to follow accounts.');
+  if (viewer.id === params.id) throw new ApiError(400, 'SELF_FOLLOW', 'You cannot follow your own account.');
+  const target = await get('SELECT id FROM users WHERE id = ?', [params.id]);
+  if (!target) throw new ApiError(404, 'NOT_FOUND', 'This account could not be found.');
+  if (tooManyAttempts('follow:' + viewer.id, 60, 60000)) throw new ApiError(429, 'RATE_LIMITED', 'You are following accounts too quickly. Try again soon.');
+  await run('INSERT OR IGNORE INTO follows (follower_id, followee_id) VALUES (?, ?)', [viewer.id, params.id]);
+  const count = await get('SELECT COUNT(*) AS count FROM follows WHERE followee_id = ?', [params.id]);
+  sendJson(res, 200, { is_following: true, followers: count.count });
+});
+
+route('DELETE', '/api/users/:id/follow', async (req, res, params) => {
+  const viewer = await getAuthedUser(req);
+  if (!viewer) throw new ApiError(401, 'UNAUTHENTICATED', 'Please log in to manage follows.');
+  await run('DELETE FROM follows WHERE follower_id = ? AND followee_id = ?', [viewer.id, params.id]);
+  const count = await get('SELECT COUNT(*) AS count FROM follows WHERE followee_id = ?', [params.id]);
+  sendJson(res, 200, { is_following: false, followers: count.count });
+});
 // ---- Global search ----
 
 route('GET', '/api/search', async (req, res, params, query) => {
