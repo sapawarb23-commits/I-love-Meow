@@ -86,7 +86,7 @@
       '<button class="btn btn-primary" id="follow-toggle" type="button">' + (data.is_following ? 'Following ✓' : '＋ Follow') + '</button>';
     const button = document.getElementById('follow-toggle');
     if (button) button.addEventListener('click', toggleFollow);
-    await Promise.all([loadPosts(u.id), loadFollowList('followers')]);
+    await loadPosts(u.id);
   }
 
   async function toggleFollow() {
@@ -126,7 +126,7 @@
 
   async function loadPosts(userId) {
     const result = await Meow.api('/api/feed?author=' + encodeURIComponent(userId) + '&limit=20');
-    document.getElementById('account-post-count').textContent = result.feed.length;
+    document.getElementById('account-post-count').textContent = account.user.meows_count || 0;
     const posts = document.getElementById('account-posts');
     posts.innerHTML = result.feed.length ? result.feed.map(function(m) {
       return '<article class="card account-post"><div class="account-muted">' + Meow.timeAgo(m.created_at) + '</div>' +
