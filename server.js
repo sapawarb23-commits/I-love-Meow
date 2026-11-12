@@ -529,7 +529,7 @@ route('GET', '/api/explore', async (req, res, params, query) => {
 
 route('GET', '/api/users/:id', async (req, res, params) => {
   const viewer = await getAuthedUser(req);
-  const profile = await get('SELECT id, username, bio, avatar_emoji, avatar_url, cover_url, meowment_points, created_at FROM users WHERE id = ?', [params.id]);
+  const profile = await get('SELECT u.id, u.username, u.bio, u.avatar_emoji, u.avatar_url, u.cover_url, u.meowment_points, u.created_at, (SELECT COUNT(*) FROM meows m WHERE m.author_id = u.id) AS meows_count FROM users u WHERE u.id = ?', [params.id]);
   if (!profile) throw new ApiError(404, 'NOT_FOUND', 'This account could not be found.');
   const [followers, following, viewerFollows] = await Promise.all([
     get('SELECT COUNT(*) AS count FROM follows WHERE followee_id = ?', [params.id]),
