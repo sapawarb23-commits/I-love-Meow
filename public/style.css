@@ -895,3 +895,10 @@ img,svg{ display:block; }
   .uploader-dropzone{ padding:18px 10px; }
   .lightbox img.zoomed{ transform:scale(1.3); }
 }
+
+
+/* Public account links */
+.account-link { color: inherit; text-decoration: none; font-weight: 600; }
+.account-link:hover { color: var(--color-primary, #d96b91); text-decoration: underline; }
+.search-result-row[href] { color: inherit; text-decoration: none; cursor: pointer; }
+.search-result-row[href]:hover { background: var(--color-surface-sunken); }

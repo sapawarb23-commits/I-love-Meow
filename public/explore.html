@@ -111,7 +111,7 @@
             ${m.caption ? `<div class="explore-caption">${Meow.escapeHtml(m.caption)}</div>` : ''}
             <div class="explore-meta">
               <span class="avatar-emoji" style="width:22px;height:22px;font-size:11px;">${m.author_avatar || '🐱'}</span>
-              <span>@${Meow.escapeHtml(m.author_username)}</span>
+              <a class="account-link" href="/user.html?id=${encodeURIComponent(m.author_id)}">@${Meow.escapeHtml(m.author_username)}</a>
               ${catLine ? `<span>· ${catLine}</span>` : ''}
             </div>
             <div class="explore-stats">
@@ -214,9 +214,11 @@
     });
   }
 
-  function searchResultRow({ icon, avatarHtml, title, sub }) {
+  function searchResultRow({ icon, avatarHtml, title, sub, href }) {
     const iconHtml = avatarHtml || `<span style="font-size:18px;">${icon}</span>`;
-    return `<div class="search-result-row">${iconHtml}<div><div class="title">${title}</div>${sub ? `<div class="sub">${sub}</div>` : ''}</div></div>`;
+    const tag = href ? 'a' : 'div';
+    const target = href ? ` href="${href}"` : '';
+    return `<${tag} class="search-result-row"${target}>${iconHtml}<div><div class="title">${title}</div>${sub ? `<div class="sub">${sub}</div>` : ''}</div></${tag}>`;
   }
 
   async function runSearch(q) {
@@ -227,7 +229,7 @@
         dropdown.innerHTML = `<p style="font-size:13px; opacity:.6; padding:6px;">No results for "${Meow.escapeHtml(q)}"</p>`;
       } else {
         dropdown.innerHTML = `
-          ${users.length ? `<div class="search-section-label">People</div>${users.map(u => searchResultRow({ avatarHtml: Meow.avatarHtml(u, { size: 30 }), title: '@' + Meow.escapeHtml(u.username), sub: `${u.meowment_points} Meowment Points` })).join('')}` : ''}
+          ${users.length ? `<div class="search-section-label">People</div>${users.map(u => searchResultRow({ href: `/user.html?id=${encodeURIComponent(u.id)}`, avatarHtml: Meow.avatarHtml(u, { size: 30 }), title: '@' + Meow.escapeHtml(u.username), sub: `${u.meowment_points} Meowment Points` })).join('')}` : ''}
           ${cats.length ? `<div class="search-section-label">Cats</div>${cats.map(c => searchResultRow({ icon: c.avatar_emoji || '🐾', title: Meow.escapeHtml(c.name), sub: `${c.breed ? Meow.escapeHtml(c.breed) + ' · ' : ''}owned by @${Meow.escapeHtml(c.owner_username)}` })).join('')}` : ''}
           ${meows.length ? `<div class="search-section-label">Meows</div>${meows.map(m => searchResultRow({ icon: '📝', title: Meow.escapeHtml((m.caption || '').slice(0, 60)) || '(image only)', sub: `by @${Meow.escapeHtml(m.author_username)} · ${Meow.timeAgo(m.created_at)}` })).join('')}` : ''}
         `;
