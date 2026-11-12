@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Account — I Love Meow</title>
+<meta name="description" content="Meet a member of the I Love Meow community.">
+<link rel="stylesheet" href="/style.css">
+<script>(function(){var t=localStorage.getItem("ilm_theme")||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",t);})();</script>
+<style>
+.account-page{max-width:760px;margin:0 auto;padding:18px 14px 50px}
+.account-card{padding:22px}.account-top{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.account-avatar{width:76px;height:76px;flex:0 0 76px}.account-name{font-size:24px;margin:0 0 4px}
+.account-bio{color:var(--color-text-muted);margin:6px 0 0;white-space:pre-wrap}
+.account-stats{display:flex;gap:22px;flex-wrap:wrap;margin-top:20px}
+.account-stat{border:0;background:transparent;padding:0;cursor:pointer;color:inherit;text-align:left;font:inherit}
+.account-stat b{display:block;font-size:20px}.account-stat span{font-size:12px;color:var(--color-text-muted)}
+.account-actions{margin-left:auto}.account-list{display:grid;gap:10px;margin-top:14px}
+.account-list-row{display:flex;align-items:center;gap:10px;padding:10px;border-radius:14px;background:var(--color-surface-sunken);color:inherit;text-decoration:none}
+.account-list-row:hover{opacity:.82}.account-list-row .small-bio{font-size:12px;color:var(--color-text-muted)}
+.account-section-title{font-weight:700;margin:24px 0 10px}.account-post{padding:16px;margin-bottom:12px}
+.account-post img{width:100%;max-height:480px;object-fit:cover;border-radius:14px;margin-top:10px}
+.account-list-panel{display:none}.account-list-panel.open{display:block}.account-muted{color:var(--color-text-muted);font-size:13px}
+@media(max-width:560px){.account-card{padding:16px}.account-actions{width:100%;margin-left:0}.account-actions button{width:100%}.account-avatar{width:64px;height:64px;flex-basis:64px}}
+</style>
+</head>
+<body>
+<div class="bg-blobs" id="bg-blobs"></div><div class="mobile-dock" id="mobile-dock"></div>
+<div class="nav-shell"><nav class="app-nav" id="app-nav"></nav></div>
+<main class="account-page">
+  <div id="account-error"></div>
+  <section class="card account-card">
+    <div class="account-top">
+      <div class="account-avatar" id="account-avatar"></div>
+      <div style="min-width:0;flex:1">
+        <h1 class="cute account-name" id="account-username">Loading account…</h1>
+        <div class="account-muted" id="account-joined"></div>
+        <p class="account-bio" id="account-bio"></p>
+      </div>
+      <div class="account-actions" id="account-actions"></div>
+    </div>
+    <div class="account-stats">
+      <div class="account-stat"><b id="account-post-count">—</b><span>Meows</span></div>
+      <button class="account-stat" type="button" id="show-followers"><b id="account-followers">—</b><span>Followers</span></button>
+      <button class="account-stat" type="button" id="show-following"><b id="account-following">—</b><span>Following</span></button>
+    </div>
+    <section class="account-list-panel" id="account-list-panel">
+      <div class="account-section-title" id="account-list-title">Followers</div>
+      <div class="account-list" id="account-list"></div>
+    </section>
+  </section>
+  <h2 class="cute account-section-title">Meows</h2>
+  <div id="account-posts"><div class="card account-post account-muted">Loading posts…</div></div>
+</main>
+<script src="/app.js"></script>
+<script>
+  Meow.renderBlobs();
+  Meow.renderNav('');
+  const accountId = new URLSearchParams(location.search).get('id');
+  const errorBox = document.getElementById('account-error');
+  const actions = document.getElementById('account-actions');
+  let account = null;
+  let followBusy = false;
+
+  function listUserHtml(user) {
+    return '<a class="account-list-row" href="/user.html?id=' + encodeURIComponent(user.id) + '">' +
+      Meow.avatarHtml(user,{size:42}) +
+      '<span style="min-width:0;flex:1"><b>@' + Meow.escapeHtml(user.username) + '</b><span class="small-bio" style="display:block">' +
+      Meow.escapeHtml(user.bio || 'A member of the clowder') + '</span></span></a>';
+  }
+
+  async function loadAccount() {
+    if (!accountId) throw new Error('This profile link is missing its account ID.');
+    const data = await Meow.api('/api/users/' + encodeURIComponent(accountId));
+    account = data;
+    const u = data.user;
+    document.title = '@' + u.username + ' — I Love Meow';
+    document.getElementById('account-avatar').innerHTML = Meow.avatarHtml(u,{size:76});
+    document.getElementById('account-username').textContent = '@' + u.username;
+    document.getElementById('account-bio').textContent = u.bio || 'A little corner of the clowder. 🐾';
+    document.getElementById('account-joined').textContent = 'Clowder member since ' +
+      new Date(u.created_at.replace(' ','T')+'Z').toLocaleDateString(undefined,{month:'short',year:'numeric'});
+    document.getElementById('account-followers').textContent = data.followers;
+    document.getElementById('account-following').textContent = data.following;
+    actions.innerHTML = data.is_self ? '<a class="btn btn-ghost" href="/profile.html">Edit profile</a>' :
+      '<button class="btn btn-primary" id="follow-toggle" type="button">' + (data.is_following ? 'Following ✓' : '＋ Follow') + '</button>';
+    const button = document.getElementById('follow-toggle');
+    if (button) button.addEventListener('click', toggleFollow);
+    await Promise.all([loadPosts(u.id), loadFollowList('followers')]);
+  }
+
+  async function toggleFollow() {
+    if (followBusy || !account) return;
+    if (!Meow.token) { location.href = '/login.html'; return; }
+    followBusy = true;
+    const button = document.getElementById('follow-toggle');
+    if (button) button.disabled = true;
+    try {
+      const result = await Meow.api('/api/users/' + encodeURIComponent(account.user.id) + '/follow', {
+        method: account.is_following ? 'DELETE' : 'POST'
+      });
+      account.is_following = result.is_following;
+      account.followers = result.followers;
+      document.getElementById('account-followers').textContent = result.followers;
+      if (button) button.textContent = result.is_following ? 'Following ✓' : '＋ Follow';
+    } catch (err) {
+      Meow.toast(err.message || 'Could not update follow status.');
+    } finally {
+      followBusy = false;
+      if (button) button.disabled = false;
+    }
+  }
+
+  async function loadFollowList(kind) {
+    const panel = document.getElementById('account-list-panel');
+    const list = document.getElementById('account-list');
+    document.getElementById('account-list-title').textContent = kind === 'followers' ? 'Followers' : 'Following';
+    list.innerHTML = '<div class="account-muted">Loading…</div>';
+    panel.classList.add('open');
+    try {
+      const result = await Meow.api('/api/users/' + encodeURIComponent(accountId) + '/' + kind);
+      list.innerHTML = result.users.length ? result.users.map(listUserHtml).join('') :
+        '<div class="account-muted">No accounts here yet.</div>';
+    } catch (err) { list.innerHTML = '<div class="account-muted">Could not load this list.</div>'; }
+  }
+
+  async function loadPosts(userId) {
+    const result = await Meow.api('/api/feed?author=' + encodeURIComponent(userId) + '&limit=20');
+    document.getElementById('account-post-count').textContent = result.feed.length;
+    const posts = document.getElementById('account-posts');
+    posts.innerHTML = result.feed.length ? result.feed.map(function(m) {
+      return '<article class="card account-post"><div class="account-muted">' + Meow.timeAgo(m.created_at) + '</div>' +
+        (m.caption ? '<div style="margin-top:8px;white-space:pre-wrap">' + Meow.escapeHtml(m.caption) + '</div>' : '') +
+        (m.image_url ? '<img src="' + Meow.escapeHtml(m.image_url) + '" alt="Meow shared by @' +
+          Meow.escapeHtml(account.user.username) + '" loading="lazy">' : '') + '</article>';
+    }).join('') : '<div class="card account-post account-muted">No Meows shared yet. 🐾</div>';
+  }
+
+  document.getElementById('show-followers').addEventListener('click', function(){ loadFollowList('followers'); });
+  document.getElementById('show-following').addEventListener('click', function(){ loadFollowList('following'); });
+  loadAccount().catch(function(err) {
+    errorBox.innerHTML = '<div class="error-msg">' + Meow.escapeHtml(err.message || 'Could not load this account.') + '</div>';
+    document.getElementById('account-posts').innerHTML = '';
+  });
+</script>
+</body>
+</html>
