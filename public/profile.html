@@ -163,7 +163,8 @@
 
   document.getElementById('load-my-meows').addEventListener('click', () => loadMyMeows(false));
 
-  function renderUser() {\n    document.getElementById('view-public-profile').href = '/user.html?id=' + encodeURIComponent(Meow.user.id);
+  function renderUser() {
+    document.getElementById('view-public-profile').href = '/user.html?id=' + encodeURIComponent(Meow.user.id);
     document.getElementById('user-avatar').innerHTML = Meow.avatarHtml(Meow.user, { size: 82 });
     const banner = document.getElementById('profile-banner');
     banner.style.backgroundImage = Meow.user.cover_url ? `url('${Meow.user.cover_url.replace(/'/g, '%27')}')` : '';
