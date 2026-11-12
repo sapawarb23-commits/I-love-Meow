@@ -75,7 +75,7 @@
         <div class="meow-head">
           ${Meow.avatarHtml(m)}
           <div>
-            <div class="meow-author">@${Meow.escapeHtml(m.author_username)}${catTag}</div>
+            <div class="meow-author"><a class="account-link" href="/user.html?id=${encodeURIComponent(m.author_id)}">@${Meow.escapeHtml(m.author_username)}</a>${catTag}</div>
             <div class="meow-meta">${Meow.timeAgo(m.created_at)}</div>
           </div>
           ${m.author_username === Meow.user.username ? `<button class="pill-btn delete-btn" style="margin-left:auto;">🗑️ Delete</button>` : ''}
