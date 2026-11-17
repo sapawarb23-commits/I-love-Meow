@@ -1,29 +1,46 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>Cat Arcade — I Love Meow</title>
 <meta name="description" content="Play cozy cat-themed arcade games, complete daily challenges, and climb the leaderboard on I Love Meow.">
-<link rel="canonical" href="https://ilovemeow.app/games.html">
+<meta name="robots" content="noindex, follow">
+<link rel="canonical" href="https://www.ilovemeow.in/games.html">
+
 <meta property="og:type" content="website">
 <meta property="og:title" content="Cat Arcade — I Love Meow">
 <meta property="og:description" content="Play cozy cat-themed arcade games, complete daily challenges, and climb the leaderboard on I Love Meow.">
-<meta property="og:url" content="https://ilovemeow.app/games.html">
-<meta property="og:image" content="https://ilovemeow.app/og-image.png">
+<meta property="og:url" content="https://www.ilovemeow.in/games.html">
+<meta property="og:image" content="https://www.ilovemeow.in/og-image.png">
+
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Cat Arcade — I Love Meow">
 <meta name="twitter:description" content="Play cozy cat-themed arcade games, complete daily challenges, and climb the leaderboard on I Love Meow.">
+
 <link rel="icon" href="data:,">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Poppins:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/style.css">
-<script>(function(){var t=localStorage.getItem("ilm_theme")||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",t);})();</script>
+
+<script>
+(function(){
+  var t = localStorage.getItem("ilm_theme") ||
+    (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  document.documentElement.setAttribute("data-theme", t);
+})();
+</script>
 </head>
+
 <body>
+
 <div class="bg-blobs" id="bg-blobs"></div>
 <div class="mobile-dock" id="mobile-dock"></div>
-<div class="nav-shell"><nav class="app-nav" id="app-nav"></nav></div>
+<div class="nav-shell">
+  <nav class="app-nav" id="app-nav"></nav>
+</div>
 
 <div class="wrap page" style="padding-top:8px; max-width:1080px;">
 
@@ -186,19 +203,19 @@
 
   const GAME_LABEL = { rhythm: '🥁 Paw Percussion', flyer: '🐈\u200d⬛ Sky Loaf' };
 
-  // ---- Featured game: deterministic pick per calendar day, same trick the
-  // backend's daily challenge uses, so it feels curated without needing its
-  // own server endpoint. ----
+  // ---- Featured game: deterministic pick per calendar day ----
   const FEATURED_POOL = [
     { game: 'rhythm', emoji: '🥁', title: 'Bongo Cat: Paw Percussion', desc: 'Tap the beat as paws fall down the lanes. Chain hits for combo multipliers.', href: '/game-rhythm.html' },
     { game: 'flyer', emoji: '🐈\u200d⬛', title: 'Nyan Cat Runner: Sky Loaf', desc: 'Dodge obstacles, grab Fish Coins & stars, and ride the rainbow as far as you can.', href: '/game-flyer.html' },
   ];
+
   function pickFeatured() {
     const dateStr = new Date().toISOString().slice(0, 10);
     let hash = 0;
     for (let i = 0; i < dateStr.length; i++) hash = (hash * 31 + dateStr.charCodeAt(i)) >>> 0;
     return FEATURED_POOL[hash % FEATURED_POOL.length];
   }
+
   function renderFeatured() {
     const f = pickFeatured();
     document.getElementById('feat-emoji').textContent = f.emoji;
@@ -207,15 +224,21 @@
     document.getElementById('feat-play-btn').href = f.href;
   }
 
-  // ---- Seasonal event: cosmetic, computed from the real calendar month —
-  // no fabricated bonus multipliers, just a themed banner + reskinned tile emoji. ----
+  // ---- Seasonal event ----
   function renderSeasonal() {
-    const month = new Date().getMonth(); // 0-11
+    const month = new Date().getMonth();
     let season;
-    if ([11, 0, 1].includes(month)) season = { emoji: '❄️', title: 'Winter Whiskers', desc: 'Cozy season is here — the Arcade is dressed up in frosty paw prints through the end of winter.' };
-    else if ([2, 3, 4].includes(month)) season = { emoji: '🌸', title: 'Spring Bloom Festival', desc: 'Petals are drifting through the Arcade this spring. Keep playing daily to build your streak.' };
-    else if ([5, 6, 7].includes(month)) season = { emoji: '🐟', title: 'Summer Fish Festival', desc: 'Warm weather, warm vibes — the Arcade is celebrating summer with a Fish Coin theme.' };
-    else season = { emoji: '🍂', title: 'Autumn Harvest', desc: 'Leaves are falling around the Arcade as the year winds down. Cozy up and play a round.' };
+
+    if ([11, 0, 1].includes(month)) {
+      season = { emoji: '❄️', title: 'Winter Whiskers', desc: 'Cozy season is here — the Arcade is dressed up in frosty paw prints through the end of winter.' };
+    } else if ([2, 3, 4].includes(month)) {
+      season = { emoji: '🌸', title: 'Spring Bloom Festival', desc: 'Petals are drifting through the Arcade this spring. Keep playing daily to build your streak.' };
+    } else if ([5, 6, 7].includes(month)) {
+      season = { emoji: '🐟', title: 'Summer Fish Festival', desc: 'Warm weather, warm vibes — the Arcade is celebrating summer with a Fish Coin theme.' };
+    } else {
+      season = { emoji: '🍂', title: 'Autumn Harvest', desc: 'Leaves are falling around the Arcade as the year winds down. Cozy up and play a round.' };
+    }
+
     document.getElementById('season-emoji').textContent = season.emoji;
     document.getElementById('season-title').textContent = season.title;
     document.getElementById('season-desc').textContent = season.desc;
@@ -235,6 +258,7 @@
 
   function renderAchievements(list) {
     const grid = document.getElementById('achv-grid');
+
     grid.innerHTML = list.map(a => `
       <div class="achv-tile ${a.unlocked ? 'unlocked' : ''}" title="${a.unlocked ? 'Unlocked' : 'Locked'}">
         <div class="achv-icon">${a.icon}</div>
@@ -242,12 +266,18 @@
         <div class="achv-desc">${Meow.escapeHtml(a.description)}</div>
       </div>
     `).join('');
+
     document.getElementById('hero-achv').textContent = list.filter(a => a.unlocked).length;
   }
 
   function renderRecent(list) {
     const el = document.getElementById('recent-list');
-    if (!list.length) { el.innerHTML = `<p style="font-size:13px; opacity:.6;">No games played yet — jump in!</p>`; return; }
+
+    if (!list.length) {
+      el.innerHTML = `<p style="font-size:13px; opacity:.6;">No games played yet — jump in!</p>`;
+      return;
+    }
+
     el.innerHTML = list.map(r => `
       <div style="display:flex; justify-content:space-between; font-size:13px;">
         <span>${GAME_LABEL[r.game] || r.game}${r.difficulty && r.difficulty !== 'default' ? ' · ' + r.difficulty : ''}</span>
@@ -259,48 +289,73 @@
   async function loadHub() {
     try {
       const hub = await Meow.api('/api/games/hub');
+
       document.getElementById('rhythm-best-pill').textContent = `Best: ${hub.bestScores.rhythm || 0}`;
       document.getElementById('flyer-best-pill').textContent = `Best: ${hub.bestScores.flyer || 0}`;
+
       document.getElementById('stat-plays').textContent = hub.stats.totalPlays;
       document.getElementById('stat-coins').textContent = hub.stats.totalCoins;
       document.getElementById('stat-xp').textContent = hub.stats.totalXp;
+
       document.getElementById('hero-plays').textContent = hub.stats.totalPlays;
       document.getElementById('hero-coins').textContent = (Meow.user && Meow.user.fish_coins) ?? hub.stats.totalCoins;
+
       fillLevel(hub.levelProgress);
       renderAchievements(hub.achievements);
       renderRecent(hub.recentlyPlayed);
 
       const c = hub.dailyChallenge;
+
       document.getElementById('challenge-desc').textContent = c.description;
       document.getElementById('challenge-status').textContent = c.completed ? '✅' : '⏳';
       document.getElementById('challenge-fill').style.width = c.completed ? '100%' : '0%';
+
       document.getElementById('challenge-sub').textContent = c.completed
         ? 'Completed today — come back tomorrow for a new one!'
         : `Play ${GAME_LABEL[c.game]} and hit the target score to complete it.`;
-    } catch (err) { Meow.toast(err.message); }
+
+    } catch (err) {
+      Meow.toast(err.message);
+    }
   }
 
   async function loadTournamentTop3() {
     try {
       const { leaderboard } = await Meow.api(`/api/games/leaderboard?game=${lbGame}&period=weekly`);
+
       const medals = ['🥇', '🥈', '🥉'];
       const el = document.getElementById('tournament-top3');
-      if (!leaderboard.length) { el.textContent = 'No scores yet this week — be the first!'; return; }
-      el.innerHTML = leaderboard.slice(0, 3).map((r, i) => `${medals[i]} @${Meow.escapeHtml(r.username)}`).join(' &nbsp;·&nbsp; ');
-    } catch (err) { /* non-critical widget — fail quietly */ }
+
+      if (!leaderboard.length) {
+        el.textContent = 'No scores yet this week — be the first!';
+        return;
+      }
+
+      el.innerHTML = leaderboard.slice(0, 3).map((r, i) =>
+        `${medals[i]} @${Meow.escapeHtml(r.username)}`
+      ).join(' &nbsp;·&nbsp; ');
+
+    } catch (err) {
+      /* non-critical widget — fail quietly */
+    }
   }
 
   let lbGame = 'rhythm';
   let lbPeriod = 'daily';
+
   async function loadLeaderboard() {
     const listEl = document.getElementById('leaderboard-list');
+
     listEl.innerHTML = Meow.loadingCatHtml('Fetching scores…');
+
     try {
       const { leaderboard } = await Meow.api(`/api/games/leaderboard?game=${lbGame}&period=${lbPeriod}`);
+
       if (!leaderboard.length) {
         listEl.innerHTML = `<p style="font-size:13px; opacity:.6; padding:8px 0;">No scores yet for this period — be the first!</p>`;
         return;
       }
+
       listEl.innerHTML = leaderboard.map(r => `
         <div class="leaderboard-row ${r.username === Meow.user.username ? 'me' : ''}">
           <span class="leaderboard-rank ${r.rank === 1 ? 'top1' : ''}">${r.rank === 1 ? '🥇' : r.rank === 2 ? '🥈' : r.rank === 3 ? '🥉' : r.rank}</span>
@@ -309,15 +364,26 @@
           <b>${r.best_score}</b>
         </div>
       `).join('');
-    } catch (err) { listEl.innerHTML = ''; Meow.toast(err.message); }
+
+    } catch (err) {
+      listEl.innerHTML = '';
+      Meow.toast(err.message);
+    }
   }
 
-  document.getElementById('lb-game').addEventListener('change', e => { lbGame = e.target.value; loadLeaderboard(); loadTournamentTop3(); });
+  document.getElementById('lb-game').addEventListener('change', e => {
+    lbGame = e.target.value;
+    loadLeaderboard();
+    loadTournamentTop3();
+  });
+
   document.querySelectorAll('#lb-period button').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('#lb-period button').forEach(b => b.classList.remove('active'));
+
       btn.classList.add('active');
       lbPeriod = btn.dataset.period;
+
       loadLeaderboard();
     });
   });
@@ -327,6 +393,7 @@
   loadHub();
   loadLeaderboard();
   loadTournamentTop3();
+
 </script>
 </body>
 </html>
