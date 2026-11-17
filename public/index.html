@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,12 +6,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>I Love Meow — A whole internet, purring.</title>
 <meta name="description" content="I Love Meow is a cozy social feed for cat lovers — share Meows, explore breeds, chase leaderboards, and hang out with a clowder of fellow cat people.">
-<link rel="canonical" href="https://ilovemeow.app/">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://www.ilovemeow.in/">
 <meta property="og:type" content="website">
 <meta property="og:title" content="I Love Meow — A whole internet, purring.">
 <meta property="og:description" content="I Love Meow is a cozy social feed for cat lovers — share Meows, explore breeds, chase leaderboards, and hang out with a clowder of fellow cat people.">
-<meta property="og:url" content="https://ilovemeow.app/">
-<meta property="og:image" content="https://ilovemeow.app/og-image.png">
+<meta property="og:url" content="https://www.ilovemeow.in/">
+<meta property="og:image" content="https://www.ilovemeow.in/og-image.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="I Love Meow — A whole internet, purring.">
 <meta name="twitter:description" content="I Love Meow is a cozy social feed for cat lovers — share Meows, explore breeds, chase leaderboards, and hang out with a clowder of fellow cat people.">
@@ -136,7 +138,7 @@
   .scroll-cue::after{ content:''; position:absolute; top:8px; left:50%; width:4px; height:8px; background:var(--dark); opacity:.4; border-radius:4px; transform:translateX(-50%); animation: scrollDot 1.6s infinite; }
   @keyframes scrollDot{ 0%{ transform:translate(-50%,0); opacity:.4;} 50%{ transform:translate(-50%,10px); opacity:1;} 100%{ transform:translate(-50%,0); opacity:.4;} }
 
-  /* ---------- Founder banner (replaces fake stats) ---------- */
+  /* ---------- Founder banner ---------- */
   .founder{ padding:20px 0 90px; }
   .founder-banner{
     display:flex; align-items:center; gap:44px; background:#fff; border:2px dashed rgba(255,145,77,0.35);
@@ -147,7 +149,7 @@
   .founder-copy p{ color:#5c5c5c; font-size:15.5px; line-height:1.6; max-width:480px; margin-bottom:22px; }
   @media (max-width:760px){ .founder-banner{ flex-direction:column; text-align:center; padding:34px 26px; } .founder-copy p{ margin-left:auto; margin-right:auto; } }
 
-  /* ---------- How it works (replaces fake testimonials) ---------- */
+  /* ---------- How it works ---------- */
   .how-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
   .how-card{ background:#fff; border-radius:var(--radius-md); padding:28px 24px; box-shadow:var(--shadow-tiny); position:relative; }
   .how-card .step-num{ font-family:'Baloo 2'; font-size:14px; font-weight:700; color:var(--primary); background:#FFEADB; width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-bottom:16px; }
@@ -156,7 +158,7 @@
   .how-card .term{ color:var(--primary-dark); font-weight:700; }
   @media (max-width:860px){ .how-grid{ grid-template-columns:1fr; } }
 
-  /* ---------- Cat rank preview (Meowment Points feature) ---------- */
+  /* ---------- Cat rank preview ---------- */
   .rank-section{ display:flex; align-items:center; gap:50px; }
   .rank-card{
     flex:0 0 320px; background: linear-gradient(160deg,#fff, var(--cream)); border-radius:var(--radius-lg);
@@ -306,7 +308,6 @@
   <div class="blob blob-3"></div>
 
   <div class="hero-cats" id="heroCats">
-    <!-- floating parallax cats, positioned via JS-friendly inline style -->
     <div class="float-cat bob" data-depth="30" style="top:22%; left:8%; width:78px; height:78px; animation-delay:0s;">
       <svg viewBox="0 0 100 100"><ellipse cx="50" cy="62" rx="34" ry="28" fill="#FFC7D6"/><path d="M22 46 L14 18 L38 38 Z" fill="#FFC7D6"/><path d="M78 46 L86 18 L62 38 Z" fill="#FFC7D6"/><circle cx="38" cy="58" r="4" fill="#1D1D1D"/><circle cx="62" cy="58" r="4" fill="#1D1D1D"/><path d="M46 66 Q50 70 54 66" stroke="#1D1D1D" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>
     </div>
@@ -333,7 +334,7 @@
   </div>
 </header>
 
-<!-- ================= FOUNDER BANNER (no fake numbers) ================= -->
+<!-- ================= FOUNDER BANNER ================= -->
 <section class="founder">
   <div class="wrap">
     <div class="founder-banner reveal">
@@ -534,7 +535,7 @@
     <div class="cta-band reveal">
       <h2 class="cute">Your cat is one profile away from internet fame.</h2>
       <p>Join for free — it takes about as long as your cat's morning stretch.</p>
-      <a href="/profile.html" class="btn btn-primary" id="cta-band-link">Create Your Cat's Profile</a>
+      <a href="/register.html" class="btn btn-primary" id="cta-band-link">Create Your Cat's Profile</a>
     </div>
   </div>
 </section>
@@ -582,7 +583,12 @@
   // Reveal on scroll
   const revealEls = document.querySelectorAll('.reveal');
   const io = new IntersectionObserver((entries) => {
-    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('in');
+        io.unobserve(e.target);
+      }
+    });
   }, { threshold: 0.15 });
   revealEls.forEach(el => io.observe(el));
 
@@ -600,7 +606,8 @@
           const eased = 1 - Math.pow(1 - p, 3);
           const val = Math.floor(target * eased);
           el.textContent = val >= 1000000 ? (val/1000000).toFixed(1) + 'M' : val >= 1000 ? (val/1000).toFixed(0) + 'K' : val;
-          if (p < 1) requestAnimationFrame(tick); else el.textContent = target >= 1000000 ? (target/1000000).toFixed(1) + 'M' : (target/1000).toFixed(0) + 'K';
+          if (p < 1) requestAnimationFrame(tick);
+          else el.textContent = target >= 1000000 ? (target/1000000).toFixed(1) + 'M' : (target/1000).toFixed(0) + 'K';
         }
         requestAnimationFrame(tick);
         countIo.unobserve(el);
@@ -609,12 +616,15 @@
   }, { threshold: 0.5 });
   counters.forEach(el => countIo.observe(el));
 
-  // Animate the cat rank preview bar (feature demo, not live data)
+  // Animate the cat rank preview bar
   const rankBar = document.getElementById('rankBar');
   if (rankBar) {
     const rankIo = new IntersectionObserver((entries) => {
       entries.forEach(e => {
-        if (e.isIntersecting) { rankBar.style.width = '71%'; rankIo.unobserve(rankBar); }
+        if (e.isIntersecting) {
+          rankBar.style.width = '71%';
+          rankIo.unobserve(rankBar);
+        }
       });
     }, { threshold: 0.4 });
     rankIo.observe(rankBar);
@@ -624,7 +634,7 @@
   const hero = document.getElementById('hero');
   const floatCats = document.querySelectorAll('.float-cat');
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (!reduceMotion) {
+  if (!reduceMotion && hero) {
     hero.addEventListener('mousemove', (e) => {
       const rect = hero.getBoundingClientRect();
       const cx = (e.clientX - rect.left) / rect.width - 0.5;
@@ -640,16 +650,23 @@
   const tags = ['🐱 Maine Coon','🍊 Orange Cat Energy','🍞 Loaf Mode','😝 Bleps','⚡ Zoomies','🐾 Ragdoll','🎩 Tuxedo Cat','🦴 Scottish Fold','😽 Sphynx','🧶 Kitten Chaos','🔥 Trending: Sleepy Cats'];
   const track = document.getElementById('marqueeTrack');
   const buildTags = () => tags.map((t,i) => `<div class="tag-pill ${i===tags.length-1?'hot':''}">${t}</div>`).join('');
-  track.innerHTML = buildTags() + buildTags();
+  if (track) track.innerHTML = buildTags() + buildTags();
 
   // FAQ accordion
   document.querySelectorAll('.faq-item').forEach(item => {
     const q = item.querySelector('.faq-q');
     const a = item.querySelector('.faq-a');
+    if (!q || !a) return;
     q.addEventListener('click', () => {
       const isOpen = item.classList.contains('open');
-      document.querySelectorAll('.faq-item.open').forEach(o => { o.classList.remove('open'); o.querySelector('.faq-a').style.maxHeight = null; });
-      if (!isOpen) { item.classList.add('open'); a.style.maxHeight = a.scrollHeight + 'px'; }
+      document.querySelectorAll('.faq-item.open').forEach(o => {
+        o.classList.remove('open');
+        o.querySelector('.faq-a').style.maxHeight = null;
+      });
+      if (!isOpen) {
+        item.classList.add('open');
+        a.style.maxHeight = a.scrollHeight + 'px';
+      }
     });
   });
 
@@ -657,7 +674,8 @@
   let toastTimer;
   function showEgg(msg){
     const toast = document.getElementById('egg-toast');
-    toast.innerHTML = '🐾 ' + msg;
+    if (!toast) return;
+    toast.textContent = '🐾 ' + msg;
     toast.classList.add('show');
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => toast.classList.remove('show'), 2600);
@@ -689,7 +707,8 @@
       cat.style.left = (-120 + p * (window.innerWidth + 200)) + 'px';
       cat.style.transform = `scaleX(1) translateY(${Math.sin(p * 18) * 6}px)`;
       if (Math.random() < 0.2) dropPaw(parseFloat(cat.style.left) + 20, y + 50);
-      if (p < 1) requestAnimationFrame(step); else cat.remove();
+      if (p < 1) requestAnimationFrame(step);
+      else cat.remove();
     }
     requestAnimationFrame(step);
   }
@@ -701,18 +720,35 @@
     paw.style.top = y + 'px';
     paw.innerHTML = `<svg viewBox="0 0 24 24" fill="#1D1D1D"><circle cx="12" cy="15.5" r="5"/><circle cx="6" cy="9.5" r="2.2"/><circle cx="18" cy="9.5" r="2.2"/><circle cx="9.5" cy="5.5" r="1.8"/><circle cx="14.5" cy="5.5" r="1.8"/></svg>`;
     document.body.appendChild(paw);
-    setTimeout(() => { paw.style.transition = 'opacity 1s'; paw.style.opacity = '0'; }, 200);
+    setTimeout(() => {
+      paw.style.transition = 'opacity 1s';
+      paw.style.opacity = '0';
+    }, 200);
     setTimeout(() => paw.remove(), 1200);
   }
 
   // If already logged in, point the CTAs straight at the app instead of registration
-  if (localStorage.getItem('ilm_token')) {
+  let isLoggedIn = false;
+  try {
+    isLoggedIn = Boolean(localStorage.getItem('ilm_token'));
+  } catch (error) {
+    // Storage may be unavailable; keep the public registration links.
+  }
+
+  if (isLoggedIn) {
     ['nav-cta-link','hero-cta-link','cta-band-link'].forEach(id => {
       const el = document.getElementById(id);
-      if (el) { el.href = '/feed.html'; el.textContent = el.id === 'cta-band-link' ? "Create Your Cat's Profile" : 'Go to Feed'; }
+      if (el) {
+        el.href = '/feed.html';
+        el.textContent = el.id === 'cta-band-link' ? "Create Your Cat's Profile" : 'Go to Feed';
+      }
     });
+
     const loginLink = document.getElementById('nav-login-link');
-    if (loginLink) { loginLink.href = '/profile.html'; loginLink.textContent = 'My Profile'; }
+    if (loginLink) {
+      loginLink.href = '/profile.html';
+      loginLink.textContent = 'My Profile';
+    }
   }
 </script>
 </body>
